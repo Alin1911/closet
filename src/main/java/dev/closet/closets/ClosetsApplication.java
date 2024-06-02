@@ -1,0 +1,13 @@
+package dev.closet.closets;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ClosetsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ClosetsApplication.class, args);
+	}
+
+}
