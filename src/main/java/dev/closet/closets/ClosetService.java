@@ -21,4 +21,8 @@ public class ClosetService {
     public Optional<Closet> closetById(ObjectId id){
         return closetRepository.findById(id);
     }
+
+    public Optional<Closet> closetByImdbId(String imdbId){
+        return closetRepository.findClosetByImdbId(imdbId);
+    }
 }

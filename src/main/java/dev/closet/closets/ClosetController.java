@@ -26,4 +26,9 @@ public class ClosetController {
     public ResponseEntity<Optional<Closet>> getClosetById(@PathVariable ObjectId id){
         return new ResponseEntity<Optional<Closet>>(closetService.closetById(id), HttpStatus.OK);
     }
+
+    @GetMapping("/imdb/{imdbId}")
+    public ResponseEntity<Optional<Closet>> getClosetByImdbId(@PathVariable String imdbId){
+        return new ResponseEntity<Optional<Closet>>(closetService.closetByImdbId(imdbId), HttpStatus.OK);
+    }
 }
