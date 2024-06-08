@@ -13,18 +13,13 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/closet")
+@RequestMapping("/api/v1/closets")
 public class ClosetController {
     @Autowired
     private ClosetService closetService;
     @GetMapping
     public ResponseEntity<List<Closet>> getAllClosets(){
         return new ResponseEntity<List<Closet>>(closetService.allClosets(), HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Optional<Closet>> getClosetById(@PathVariable ObjectId id){
-        return new ResponseEntity<Optional<Closet>>(closetService.closetById(id), HttpStatus.OK);
     }
 
     @GetMapping("/imdb/{imdbId}")

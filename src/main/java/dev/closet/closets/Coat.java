@@ -15,4 +15,8 @@ public class Coat {
     @Id
     public ObjectId id;
     private String body;
+
+    public Coat(String body) {
+        this.body = body;
+    }
 }
