@@ -1,0 +1,81 @@
+{
+	"info": {
+		"_postman_id": "851763ab-dcc3-43b1-bcdf-6e4fb8457461",
+		"name": "closets",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20327048"
+	},
+	"item": [
+		{
+			"name": "get closet by imdb",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/api/v1/closets/imdb/tt3447590",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"closets",
+						"imdb",
+						"tt3447590"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get closets",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/api/v1/closets",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"closets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create coat",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"body\": \"111111\",\r\n    \"imdbId\":\"tt3447590\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/api/v1/coat",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"coat"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
