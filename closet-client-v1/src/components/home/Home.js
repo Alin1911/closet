@@ -1,9 +1,8 @@
 import React from 'react'
+import Hero from '../hero/Hero'
 
-export default function Home() {
+export default function Home({closets}) {
   return (
-    <div>
-      Weolcome to Closet
-    </div>
+    <Hero closets={closets}></Hero>
   )
 }
