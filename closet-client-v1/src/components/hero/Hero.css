@@ -4,6 +4,9 @@
 }
 .closet-poster {
     height: 300px;
+    border: 1px solid gold;
+    border-radius:  10px;
+    overflow: hidden;
 }
 .closet-poster > img {
     width: 100%;
@@ -27,4 +30,9 @@
     display: flex;
     justify-content: space-evenly;
     width: 100%;
+}
+.closet-title{
+    color: white;
+    display: flex;
+    align-items: center;
 }
