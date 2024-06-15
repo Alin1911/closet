@@ -3,9 +3,17 @@ import Carousel from 'react-material-ui-carousel'
 import { Paper } from '@mui/material'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons'
-import { Link } from 'react-router-dom'
+import { Link , useNavigate} from 'react-router-dom'
+import { Button } from 'react-bootstrap'
 
  const Hero = ({closets}) => {
+
+    const navigate = useNavigate();
+
+    function coats(closetId){
+        navigate(`/Coats/${closetId}`);
+    }
+
   return (
     <div>
         <Carousel className='closet-carousel-container'>
@@ -30,6 +38,9 @@ import { Link } from 'react-router-dom'
                                                     />
                                                 </div>
                                             </Link>
+                                            <div className='closet-coat-button-container'>
+                                                <Button variant="info" onClick={() => coats(closet.imdbId)}>Coats</Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
