@@ -17,13 +17,10 @@ import java.util.List;
 public class Closet {
     @Id
     private ObjectId id;
-    private String imdbId;
-    private String title;
-    private String releaseDate;
-    private String trailerLink;
+    private String name;
     private String poster;
-    private List<String> genres;
-    private List<String> backdrops;
+    private String description;
+    private List<String> images;
     @DocumentReference
-    private List<Coat> reviewIds;
+    private List<Coat> coatsIds;
 }

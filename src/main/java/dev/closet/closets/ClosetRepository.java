@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface ClosetRepository extends MongoRepository<Closet, ObjectId> {
-    Optional<Closet> findClosetByImdbId(String imdbId);
+    Optional<Closet> findClosetById(String id);
 }

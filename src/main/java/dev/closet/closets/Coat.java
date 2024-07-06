@@ -7,6 +7,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 @Document(collection  = "clothes")
 @Data
 @AllArgsConstructor
@@ -14,9 +16,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Coat {
     @Id
     public ObjectId id;
-    private String body;
+    private List<String> images;
+    private String name;
+    private String description;
 
-    public Coat(String body) {
-        this.body = body;
+    public Coat(String name, String description, List<String> images) {
+        this.name = name;
+        this.description = description;
+        this.images = images;
     }
 }

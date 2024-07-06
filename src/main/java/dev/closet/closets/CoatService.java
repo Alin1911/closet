@@ -6,6 +6,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CoatService {
     @Autowired
@@ -14,14 +16,18 @@ public class CoatService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public Coat createCoat(String body, String imdbId) {
-        Coat coat = coatRepository.insert(new Coat(body));
+    public Coat createCoat(String name, String description, List<String> images, String id) {
+        Coat coat = coatRepository.insert(new Coat(name, description, images));
 
         mongoTemplate.update(Closet.class)
-                .matching(Criteria.where("imdbId").is(imdbId))
-                .apply(new Update().push("reviewIds").value(coat))
+                .matching(Criteria.where("id").is(id))
+                .apply(new Update().push("coatsIds").value(coat))
                 .first();
 
         return coat;
+    }
+
+    public Coat createCoat(String name, String description, List<String> images) {
+        return coatRepository.insert(new Coat(name, description, images));
     }
 }
