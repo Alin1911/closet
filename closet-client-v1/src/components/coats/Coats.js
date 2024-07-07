@@ -19,7 +19,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats}) => {
         try {
             e.preventDefault();
             const coat = coatText.current;
-            await api.post("/api/v1/closets",{body:coat.value,imdbId:closetId});
+            await api.post("/api/v1/closets",{body:coat.value,id:closetId});
             const updatedCoats = [...coats,{body:coat.value}];
             coat.value = "";
             setCoats(updatedCoats);
