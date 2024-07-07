@@ -20,7 +20,7 @@ import { Button } from 'react-bootstrap'
             {
                 closets.map((closet) =>{
                      return (
-                        <Paper key={closet.imdbId}>
+                        <Paper key={closet.id}>
                             <div className='closet-carousel-container'>
                                 <div className='closet-card' style={{"--img": `url(${closet.backdrops[0]})`}}>
                                     <div className='closet-detail'>
@@ -39,7 +39,7 @@ import { Button } from 'react-bootstrap'
                                                 </div>
                                             </Link>
                                             <div className='closet-coat-button-container'>
-                                                <Button variant="info" onClick={() => coats(closet.imdbId)}>Coats</Button>
+                                                <Button variant="info" onClick={() => coats(closet.id)}>Coats</Button>
                                             </div>
                                         </div>
                                     </div>
