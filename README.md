@@ -157,7 +157,7 @@ Base path: `/api/v1/closets`
 - **Route:** `/api/v1/closets`
 - **Controller:** `ClosetController#getAllClosets`
 
-### Get closet by ID (route currently uses `imdb` naming)
+### Get closet by ID (uses legacy `imdb` parameter naming)
 
 - **Method:** `GET`
 - **Route:** `/api/v1/closets/imdb/{imdbId}`
@@ -190,7 +190,7 @@ npm test
 
 ## Missing / Not Implemented Features
 
-- **Working closet-by-id endpoint contract:** backend route uses `/imdb/{imdbId}` but controller currently expects a path variable named `id`; this can break fetching a single closet by ID.
+- **Aligned closet-by-id endpoint contract:** backend route uses `/imdb/{imdbId}` while controller uses `@PathVariable ObjectId id`; parameter naming should be aligned.
 - **Coat creation payload alignment:** frontend posts `{ body, id }` while backend expects `{ name, description, images }`; coat creation does not match end-to-end contract yet.
 - **Closet-linked coat writes from UI:** backend supports adding a coat to a specific closet via `createCoat(..., id)`, but current controller path uses the generic create method and does not attach coats to a closet.
 - **Consistent domain naming migration:** multiple frontend/backend fields still use movie terms (`trailerLink`, `backdrops`, `title`, `reviewIds`, `imdb`) instead of closet-domain naming.
