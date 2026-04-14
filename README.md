@@ -157,7 +157,7 @@ Base path: `/api/v1/closets`
 - **Route:** `/api/v1/closets`
 - **Controller:** `ClosetController#getAllClosets`
 
-### Get closet by id (current route name uses `imdb`)
+### Get closet by ID (route currently uses `imdb` naming)
 
 - **Method:** `GET`
 - **Route:** `/api/v1/closets/imdb/{imdbId}`
