@@ -12,24 +12,38 @@ function App() {
   const [closets, setClosets] = useState([]);
   const [closet, setCloset] = useState({});
   const [coats, setCoats] = useState([]);
+  const [closetsLoading, setClosetsLoading] = useState(true);
+  const [closetsError, setClosetsError] = useState('');
+  const [closetLoading, setClosetLoading] = useState(false);
+  const [closetError, setClosetError] = useState('');
 
   const getClosets = async () => {
+    setClosetsLoading(true);
+    setClosetsError('');
     try {
       const response = await api.get('/api/v1/closets');
       setClosets(response.data);
     } catch (error) {
       console.error(error);
+      setClosetsError('Failed to load closets. Please try again.');
+    } finally {
+      setClosetsLoading(false);
     }
   }
 
   const getClosetData = async (closetId) => {
+    setClosetLoading(true);
+    setClosetError('');
     try {
-      const response = await api.get(`/api/v1/closets/imdb/${closetId}`);
+      const response = await api.get(`/api/v1/closets/${closetId}`);
       const singleCloset = response.data;
       setCloset(singleCloset);
-      setCoats(singleCloset.reviewIds)
+      setCoats(singleCloset?.coatsIds ?? singleCloset?.reviewIds ?? []);
     } catch (error) {
       console.error(error);
+      setClosetError('Failed to load closet details.');
+    } finally {
+      setClosetLoading(false);
     }
   
   }
@@ -43,9 +57,11 @@ function App() {
       <Header/>
       <Routes>
         <Route path="/" element={<Layout/>}>
-          <Route path="/" element={<Home closets={closets}/>} />
+          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} />} />
+          <Route path="/browse" element={<Home closets={closets} loading={closetsLoading} error={closetsError} />} />
           <Route path='/Trailer/:ytTrailerId' element={<Trailer/>} />
-          <Route path="/Coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} />} />
+          <Route path="/coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} loading={closetLoading} error={closetError} />} />
+          <Route path="/Coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} loading={closetLoading} error={closetError} />} />
         </Route>
       </Routes>
     </div>

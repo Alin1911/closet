@@ -21,7 +21,18 @@ public class ClosetController {
     }
 
     @GetMapping("/imdb/{imdbId}")
-    public ResponseEntity<Optional<Closet>> getClosetByImdbId(@PathVariable ObjectId id){
-        return new ResponseEntity<Optional<Closet>>(closetService.closetById(id), HttpStatus.OK);
+    public ResponseEntity<Optional<Closet>> getClosetByImdbId(@PathVariable String imdbId){
+        if (!ObjectId.isValid(imdbId)) {
+            return new ResponseEntity<>(Optional.empty(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<Optional<Closet>>(closetService.closetById(new ObjectId(imdbId)), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<Closet>> getClosetById(@PathVariable String id) {
+        if (!ObjectId.isValid(id)) {
+            return new ResponseEntity<>(Optional.empty(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(closetService.closetById(new ObjectId(id)), HttpStatus.OK);
     }
 }

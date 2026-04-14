@@ -5,11 +5,12 @@ import  Container  from 'react-bootstrap/Container'
 import  Nav  from 'react-bootstrap/Nav'
 import  Navbar  from 'react-bootstrap/Navbar'
 import { NavLink } from 'react-router-dom'
+
 function Header() {
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
         <Container>
-            <Navbar.Brand href="/" style={{ "color" : 'gold'}}>
+            <Navbar.Brand as={NavLink} to="/" style={{ "color" : 'gold'}}>
                 <FontAwesomeIcon icon={faVideoSlash} /> Closet
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="navbarScroll" />
@@ -20,7 +21,7 @@ function Header() {
                     navbarScroll
                     >
                     <NavLink className="nav-link" to="/">Home</NavLink>
-                    <NavLink className="nav-link" to="/closets">Closets</NavLink>
+                    <NavLink className="nav-link" to="/browse">Browse</NavLink>
                 </Nav>
                 <Button variant="outline-info" className="me-2">Login</Button>
                 <Button variant="outline-info" className='me-2'>Register</Button>
