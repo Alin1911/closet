@@ -17,7 +17,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error}) =
 
     useEffect(() => {
         getClosetData(closetId);
-    }, [closetId]);
+    }, [closetId, getClosetData]);
 
     const addCoat = async (e) => {
         try {

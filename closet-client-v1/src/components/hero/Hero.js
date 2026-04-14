@@ -35,8 +35,8 @@ import { Button } from 'react-bootstrap'
                                         </div>
                                         <div className='closet-button-container'>
                                             {trailerId ? (
-                                            <Link to={`/Trailer/${trailerId}`}>
-                                                <div className='play-button-icon-container' aria-label='Watch lookbook'>
+                                            <Link to={`/trailer/${trailerId}`} aria-label='Watch lookbook'>
+                                                <div className='play-button-icon-container'>
                                                     <FontAwesomeIcon className='play-button-icon'
                                                         icon={faCirclePlay}
                                                     />

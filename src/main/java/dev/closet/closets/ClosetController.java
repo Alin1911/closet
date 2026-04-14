@@ -21,11 +21,11 @@ public class ClosetController {
     }
 
     @GetMapping("/imdb/{imdbId}")
-    public ResponseEntity<Optional<Closet>> getClosetByImdbId(@PathVariable String imdbId){
-        if (!ObjectId.isValid(imdbId)) {
+    public ResponseEntity<Optional<Closet>> getClosetByImdbId(@PathVariable("imdbId") String closetId){
+        if (!ObjectId.isValid(closetId)) {
             return new ResponseEntity<>(Optional.empty(), HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<Optional<Closet>>(closetService.closetById(new ObjectId(imdbId)), HttpStatus.OK);
+        return new ResponseEntity<Optional<Closet>>(closetService.closetById(new ObjectId(closetId)), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

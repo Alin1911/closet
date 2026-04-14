@@ -20,10 +20,10 @@ public class CoatController {
             return ResponseEntity.badRequest().body("Request body is required.");
         }
         if (payload.name() == null || payload.name().isBlank()) {
-            return ResponseEntity.badRequest().body("name is required.");
+            return ResponseEntity.badRequest().body("Name is required.");
         }
         if (payload.description() == null || payload.description().isBlank()) {
-            return ResponseEntity.badRequest().body("description is required.");
+            return ResponseEntity.badRequest().body("Description is required.");
         }
 
         CoatCreateRequest normalizedPayload = new CoatCreateRequest(
