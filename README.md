@@ -13,7 +13,8 @@ Full-stack project with a **Spring Boot + MongoDB backend** and a **React fronte
 - [Environment Variables](#environment-variables)
 - [API Endpoints](#api-endpoints)
 - [Run Tests](#run-tests)
-- [Known Gaps / Notes](#known-gaps--notes)
+- [Missing / Not Implemented Features](#missing--not-implemented-features)
+- [Nice-to-have / Future Improvements](#nice-to-have--future-improvements)
 - [Troubleshooting](#troubleshooting)
 
 ## Project Overview
@@ -187,16 +188,28 @@ cd /home/runner/work/closet/closet/closet-client-v1
 npm test
 ```
 
-## Known Gaps / Notes
+## Missing / Not Implemented Features
 
-- Several naming artifacts still reference movie-style terms (`imdb`, `trailer`, `reviewIds`) while domain is closets/coats.
-- Frontend and backend payload/field names are not fully aligned in all flows.
-- No authentication/authorization is implemented yet.
-- Frontend API URL is hardcoded to localhost.
+- **Working closet-by-id endpoint contract:** backend route uses `/imdb/{imdbId}` but controller currently expects a path variable named `id`; this can break fetching a single closet by ID.
+- **Coat creation payload alignment:** frontend posts `{ body, id }` while backend expects `{ name, description, images }`; coat creation does not match end-to-end contract yet.
+- **Closet-linked coat writes from UI:** backend supports adding a coat to a specific closet via `createCoat(..., id)`, but current controller path uses the generic create method and does not attach coats to a closet.
+- **Consistent domain naming migration:** multiple frontend/backend fields still use movie terms (`trailerLink`, `backdrops`, `title`, `reviewIds`, `imdb`) instead of closet-domain naming.
+- **Auth flows behind header actions:** Login/Register buttons are visible in UI, but no authentication/authorization flow is implemented.
+- **Error/loading states in UI:** API calls log to console, but user-facing loading, empty, and failure states are largely missing.
+
+## Nice-to-have / Future Improvements
+
+- **Environment-based frontend API URL** instead of hardcoded `http://localhost:8080`.
+- **CRUD completeness** for closets/coats (update/delete endpoints and UI actions).
+- **Validation and request schemas** (backend DTO validation + better frontend form validation).
+- **Automated API documentation** (Swagger/OpenAPI).
+- **Role-based access control** once auth is added.
+- **Improved test coverage** (controller/service tests for backend and component/integration tests for frontend).
+- **CI workflow for lint/test/build** on pull requests.
+- **Pagination/filter/search** for closet listings.
 
 ## Troubleshooting
 
 - **Mongo connection issues:** verify `.env` values and network access to your Mongo cluster.
 - **CORS issues:** backend currently allows `http://localhost:3000` only.
 - **Frontend cannot reach backend:** ensure backend is running on port `8080`.
-
