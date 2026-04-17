@@ -43,10 +43,10 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Search ranking and relevance scoring are still basic
 
 ### Proposed new features (high-impact, realistic)
-- **[Next] Auth hardening** (token/session, guarded routes, profile editing)
-- **[Next] API docs and CI quality gates**
-- **[Next] Search + pagination for larger datasets**
-- **[Next] Observability and analytics**
+- **[Next] Security maturity** (session revocation, refresh-token rotation, stricter policy controls)
+- **[Next] Search relevance upgrades** (ranking, typo tolerance, faceted counts)
+- **[Next] Broader automated test coverage** (backend controller/service + frontend interaction tests)
+- **[Next] Production observability depth** (dashboards, alerting, tracing)
 
 ---
 
@@ -122,9 +122,9 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 Most high-impact quick wins are implemented (IA, CTA clarity, basic loading/error/empty handling, mobile touch targets).
 
 Next UX opportunities:
-- Add skeleton states instead of text-only loading states
-- Add toasts/snackbars for save/update/delete feedback consistency
-- Improve browse filter discoverability and reset controls
+- Improve accessibility (focus management, keyboard navigation, richer ARIA coverage)
+- Add richer pagination navigation (direct page jump, visible page numbers)
+- Polish empty/error states with recovery-oriented actions
 
 ---
 
@@ -134,10 +134,12 @@ Next UX opportunities:
 - ✅ Closet and coat CRUD completion (including coat note update/delete)
 - ✅ Frontend API base URL externalized via env variable fallback
 - ✅ Auth/profile basics + favorites persistence
+- ✅ API docs (OpenAPI/Swagger)
+- ✅ CI quality gates (GitHub Actions backend/frontend checks)
+- ✅ Basic analytics event hooks for key UX actions
 - ⏳ Centralized frontend query/state (React Query or equivalent)
-- ⏳ API docs (OpenAPI/Swagger)
-- ⏳ CI quality gates and broader automated tests
-- ⏳ Scaling patterns: pagination, search indexing, caching, observability
+- ⏳ Broader automated test coverage
+- ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
 
 ---
 
@@ -155,14 +157,15 @@ Next UX opportunities:
 - ✅ Implement closet detail page with richer metadata
 - ✅ Introduce DTO validation and consistent API response structure
 - ✅ Add update/delete operations for coats
-- ⏳ Add basic analytics events for conversion funnels
+- ✅ Add basic analytics events for conversion funnels
 
 ### Major upgrades (long-term vision)
 - ✅ Add authentication/profile basics and saved experiences
 - ⏳ Domain naming cleanup/migration away from legacy movie-template artifacts
-- Search/filter platform with scalable pagination and ranking
-- CI/CD with quality gates and broader automated test coverage
-- Observability stack (structured logs, metrics, tracing)
+- ✅ Search/filter platform with scalable pagination foundation
+- ✅ CI/CD quality gates baseline
+- ⏳ Broader automated test coverage
+- ⏳ Observability stack expansion (structured logs + metrics + tracing)
 
 ---
 
