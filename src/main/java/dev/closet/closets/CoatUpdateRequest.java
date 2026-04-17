@@ -5,8 +5,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record CoatCreateRequest(
-        String closetId,
+public record CoatUpdateRequest(
         @NotBlank(message = "Name is required.")
         @Size(max = 120, message = "Name must be at most 120 characters.")
         String name,

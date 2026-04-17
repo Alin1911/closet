@@ -2,8 +2,22 @@
   min-height: 44px;
 }
 
+.coats-page img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
 @media only screen and (max-width: 800px) {
   .coats-page {
     padding-bottom: 16px;
+  }
+
+  .coats-page form {
+    position: sticky;
+    top: 72px;
+    background: #0d0d0d;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 2;
   }
 }

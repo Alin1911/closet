@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
+import java.time.Instant;
 import java.util.List;
 
 @Document(collection  = "closets")
@@ -20,7 +21,13 @@ public class Closet {
     private String name;
     private String poster;
     private String description;
+    private String trailerLink;
     private List<String> images;
+    private String style;
+    private String season;
+    private String color;
+    private Instant createdAt;
+    private Instant updatedAt;
     @DocumentReference
     private List<Coat> coatsIds;
 }
