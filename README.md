@@ -21,28 +21,28 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 ## Current Features
 
 ### Implemented today
-- Browse all closets from MongoDB-backed API (`GET /api/v1/closets`)
-- Hero carousel UI for featured closet records
-- Navigate to a trailer/video screen per closet
-- Navigate to a coats screen per closet
-- Submit new coat entries from UI (create endpoint exists)
-- REST API with Spring Web + Spring Data MongoDB
-- CORS enabled for local frontend (`http://localhost:3000`)
+- Browse closets from MongoDB-backed API with server-side filtering/sorting (`style`, `season`, `color`, `sort`)
+- Hero carousel + dedicated Browse experience
+- Closet detail page with metadata, related closets, and clear next actions
+- Trailer/watch lookbook screen per closet
+- Coat notes management: create, update, delete
+- Saved closets/favorites per user profile
+- Recently viewed / continue browsing on Home
+- Auth/profile basics (register/login) wired to header actions
+- DTO validation + consistent API response envelope for write/auth flows
+- REST API with Spring Web + Spring Data MongoDB, CORS enabled for `http://localhost:3000`
 
 ### Known current gaps in implementation
-- Domain naming is partially inherited from a movie template (`imdb`, `trailerLink`, `backdrops`, `title`, `reviewIds`)
-- Coat creation contract is inconsistent between frontend payload and backend model
-- Header includes `Login` / `Register` actions but no auth flow
-- Limited loading, empty, and error states in UI
-- Broken/unused navigation path (`/closets`) in header
+- Auth is basic and does not include JWT/session management or route protection
+- API docs (OpenAPI/Swagger) are not added yet
+- Search/pagination/ranking are not implemented yet
+- Automated test coverage is still limited (especially backend controller/service tests)
 
 ### Proposed new features (high-impact, realistic)
-- **[Proposed] Smart filtering and sorting** (style, season, color, newest) to improve discovery and conversion
-- **[Proposed] Saved closets / favorites** to increase retention and repeat sessions
-- **[Proposed] Recently viewed + continue browsing** to improve engagement
-- **[Proposed] Closet detail page** with complete metadata, related closets, and clear next actions
-- **[Proposed] Editable coat notes** (create/update/delete) for practical utility
-- **[Proposed] Auth + profile basics** (email/password + saved lists) behind existing header CTAs
+- **[Next] Auth hardening** (token/session, guarded routes, profile editing)
+- **[Next] API docs and CI quality gates**
+- **[Next] Search + pagination for larger datasets**
+- **[Next] Observability and analytics**
 
 ---
 
@@ -51,10 +51,11 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 ### Backend
 - Framework: Spring Boot 3.3.0 (Java 22 target)
 - Modules:
-  - Controllers: `ClosetController`, `CoatController`
-  - Services: `ClosetService`, `CoatService`
-  - Repositories: `ClosetRepository`, `CoatRepository`
-  - Domain models: `Closet`, `Coat`
+  - Controllers: `ClosetController`, `CoatController`, `AuthController`
+  - Services: `ClosetService`, `CoatService`, `AuthService`
+  - Repositories: `ClosetRepository`, `CoatRepository`, `UserRepository`
+  - Domain models: `Closet`, `Coat`, `UserProfile`
+  - Validation and response DTOs for closet/coat/auth payloads
 - Data store: MongoDB Atlas (configured via env vars)
 - Config:
   - `src/main/resources/application.properties`
@@ -66,13 +67,16 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - UI: React Bootstrap + Bootstrap + MUI + Font Awesome
 - HTTP client: Axios (`src/api/axiosConfig.js`)
 - Main screens/components:
-  - Header/navigation
-  - Home + Hero carousel
+  - Home + Hero + continue browsing
+  - Browse (filter/sort)
+  - Closet detail
+  - Coats screen + coat note CRUD
+  - Saved closets
+  - Profile (login/register)
   - Trailer screen
-  - Coats screen + coat form
 
 ### Communication model
-- Frontend calls backend REST endpoints via Axios (`http://localhost:8080` hardcoded today)
+- Frontend calls backend REST endpoints via Axios (`REACT_APP_API_BASE_URL` with localhost fallback)
 - Backend serves JSON resources from `/api/v1/closets`
 - Services mediate controller ↔ repository/database interactions
 
@@ -90,71 +94,68 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 2. App routes to trailer screen
 3. Embedded YouTube player loads selected video
 
-### 3) View and add coats
-1. User clicks `Coats` on a closet card
+### 3) View and manage coat notes
+1. User clicks `View items` on a closet card/detail page
 2. App fetches closet-specific data
-3. User submits coat text in form
-4. Frontend posts to coat creation endpoint
-5. UI appends new entry to local list
+3. User submits note text in form
+4. Frontend calls nested coat-note endpoints
+5. User can edit/delete notes inline
+
+### 4) Save favorites
+1. User registers or logs in from Profile page
+2. User saves/removes closets from Browse/Home/Detail
+3. Saved closets appear under the `Saved` route
+
+### 5) Continue browsing
+1. User opens closet detail/coats
+2. App stores recently viewed closet IDs locally
+3. Home displays `Continue browsing` cards
 
 ---
 
 ## UX / UI Improvement Opportunities
 
-### Navigation and structure
-- Replace broken `/closets` nav link with a valid route (or add real listing page)
-- Add consistent top-level IA: Home, Browse, Saved, Profile
-- Add breadcrumb/back actions on detail screens
+Most high-impact quick wins are implemented (IA, CTA clarity, basic loading/error/empty handling, mobile touch targets).
 
-### Clarity of actions and flows
-- Replace ambiguous labels (`Coats`, `Trailer`) with clearer CTA copy (`View items`, `Watch lookbook`)
-- Add explicit primary CTA per screen and secondary actions below fold
-- Add success/error feedback for form submission
-
-### Visual hierarchy
-- Standardize card typography and spacing tokens
-- Improve contrast and text overlays on carousel backgrounds
-- Add skeleton/loading states and empty-state cards
-
-### Mobile experience
-- Reduce hero height and CTA crowding on small screens
-- Increase touch target sizes for play and coat actions
-- Make coats form and list vertically optimized with sticky submit area
+Next UX opportunities:
+- Add skeleton states instead of text-only loading states
+- Add toasts/snackbars for save/update/delete feedback consistency
+- Improve browse filter discoverability and reset controls
 
 ---
 
 ## Technical / Product Enhancements
 
-- Align API contracts with frontend payloads using DTOs + validation
-- Complete CRUD for closets/coats and align route naming to closet domain
-- Introduce centralized frontend state/query handling (React Query or equivalent)
-- Externalize frontend API base URL via environment variables
-- Add API docs (OpenAPI/Swagger)
-- Add CI pipeline for backend tests + frontend build/test checks
-- Improve test strategy: controller/service tests, component tests, and key user-flow tests
-- Prepare scaling patterns: pagination, search indexing, response caching, and observability
+- ✅ API contract alignment with DTO validation
+- ✅ Closet and coat CRUD completion (including coat note update/delete)
+- ✅ Frontend API base URL externalized via env variable fallback
+- ✅ Auth/profile basics + favorites persistence
+- ⏳ Centralized frontend query/state (React Query or equivalent)
+- ⏳ API docs (OpenAPI/Swagger)
+- ⏳ CI quality gates and broader automated tests
+- ⏳ Scaling patterns: pagination, search indexing, caching, observability
 
 ---
 
 ## Improvements Roadmap
 
 ### Quick wins (low effort, high impact)
-- Fix broken/unused routes and rename unclear CTAs
-- Add loading/empty/error UI states for core API calls
-- Move frontend API URL to env config
-- Align coat payload shape between frontend and backend
-- Improve mobile spacing/CTA tap targets in hero and coats screens
+- ✅ Fix broken/unused routes and rename unclear CTAs
+- ✅ Add loading/empty/error UI states for core API calls
+- ✅ Move frontend API URL to env config
+- ✅ Align coat payload shape between frontend and backend
+- ✅ Improve mobile spacing/CTA tap targets in hero and coats screens
 
 ### Medium improvements
-- Add favorites and recently viewed
-- Implement closet detail page with richer metadata
-- Introduce DTO validation and consistent API response structure
-- Add update/delete operations for coats
-- Add basic analytics events for conversion funnels
+- ✅ Add favorites and recently viewed
+- ✅ Implement closet detail page with richer metadata
+- ✅ Introduce DTO validation and consistent API response structure
+- ✅ Add update/delete operations for coats
+- ⏳ Add basic analytics events for conversion funnels
 
 ### Major upgrades (long-term vision)
-- Add authentication, profiles, and saved experiences
-- Domain naming cleanup/migration away from movie-template fields
+- ✅ Add authentication/profile basics and saved experiences
+- ⏳ Domain naming cleanup/migration away from legacy movie-template artifacts
 - Search/filter platform with scalable pagination and ranking
 - CI/CD with quality gates and broader automated test coverage
 - Observability stack (structured logs, metrics, tracing)
@@ -247,11 +248,26 @@ CI=true npm test -- --watchAll=false --passWithNoTests
 
 ## API Snapshot
 
-Base path: `/api/v1/closets`
+Closets:
+- `GET /api/v1/closets` → list closets (`style`, `season`, `color`, `sort` query params supported)
+- `GET /api/v1/closets/{id}` → get single closet
+- `GET /api/v1/closets/imdb/{imdbId}` → legacy get-by-id route kept for compatibility
+- `POST /api/v1/closets` → create closet
+- `PUT /api/v1/closets/{id}` → update closet
+- `DELETE /api/v1/closets/{id}` → delete closet
 
-- `GET /api/v1/closets` → list closets
-- `GET /api/v1/closets/imdb/{imdbId}` → get single closet (legacy route naming)
-- `POST /api/v1/closets` → create coat (current implementation)
+Coat notes:
+- `GET /api/v1/closets/{closetId}/coats` → list coat notes for closet
+- `POST /api/v1/closets/{closetId}/coats` → create coat note
+- `PUT /api/v1/closets/{closetId}/coats/{coatId}` → update coat note
+- `DELETE /api/v1/closets/{closetId}/coats/{coatId}` → delete coat note
+
+Auth/profile + favorites:
+- `POST /api/v1/auth/register` → register user
+- `POST /api/v1/auth/login` → login user
+- `GET /api/v1/users/{userId}/favorites` → list saved closets
+- `PUT /api/v1/users/{userId}/favorites/{closetId}` → save closet
+- `DELETE /api/v1/users/{userId}/favorites/{closetId}` → remove saved closet
 
 ---
 
