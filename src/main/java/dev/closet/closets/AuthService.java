@@ -2,6 +2,7 @@ package dev.closet.closets;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,8 @@ public class AuthService {
     @Autowired
     private TokenService tokenService;
 
-    private static final long SESSION_TTL_SECONDS = 60L * 60L * 24L * 7L;
+    @Value("${auth.session.ttl-seconds:604800}")
+    private long sessionTtlSeconds;
 
     public Optional<AuthResponse> register(AuthRegisterRequest request) {
         String email = request.email().trim().toLowerCase();
@@ -116,7 +118,7 @@ public class AuthService {
     private AuthResponse issueSession(UserProfile user) {
         String token = tokenService.generateRawToken();
         user.setSessionTokenHash(tokenService.hashToken(token));
-        user.setSessionExpiresAt(Instant.now().plusSeconds(SESSION_TTL_SECONDS));
+        user.setSessionExpiresAt(Instant.now().plusSeconds(sessionTtlSeconds));
         user.setUpdatedAt(Instant.now());
         UserProfile saved = userRepository.save(user);
         return toResponse(saved, token);

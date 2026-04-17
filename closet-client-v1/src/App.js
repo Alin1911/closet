@@ -188,7 +188,7 @@ function App() {
       <Header authUser={authUser} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<Layout/>}>
-          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} />} />
+          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path="/browse" element={<Browse closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path="/saved" element={<ProtectedRoute authUser={authUser}><Saved closets={savedClosets} loading={closetsLoading} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} onNotify={showToast} /></ProtectedRoute>} />
           <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} onUpdateProfile={handleProfileUpdate} onNotify={showToast} />} />
@@ -200,7 +200,7 @@ function App() {
         </Route>
       </Routes>
       <ToastContainer position="bottom-end" className="p-3">
-        <Toast bg="dark" onClose={() => setToast({ show: false, message: '' })} show={toast.show} delay={2500} autohide>
+        <Toast bg="dark" role="status" aria-live="polite" onClose={() => setToast({ show: false, message: '' })} show={toast.show} delay={2500} autohide>
           <Toast.Body className="text-light">{toast.message}</Toast.Body>
         </Toast>
       </ToastContainer>

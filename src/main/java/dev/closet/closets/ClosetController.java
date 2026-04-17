@@ -30,6 +30,12 @@ public class ClosetController {
             @RequestParam(required = false) Integer size
     ){
         if (page != null || size != null || (query != null && !query.isBlank())) {
+            if (page != null && page < 0) {
+                return new ResponseEntity<>(List.of(), HttpStatus.BAD_REQUEST);
+            }
+            if (size != null && size <= 0) {
+                return new ResponseEntity<>(List.of(), HttpStatus.BAD_REQUEST);
+            }
             ClosetPageResponse response = closetService.allClosetsPage(style, season, color, sort, query, page == null ? 0 : page, size == null ? 12 : size);
             HttpHeaders headers = new HttpHeaders();
             headers.add("X-Total-Count", String.valueOf(response.totalCount()));

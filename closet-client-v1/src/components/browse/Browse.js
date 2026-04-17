@@ -74,7 +74,7 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
     const next = { ...filters, [name]: value, page: name === 'page' ? value : 0 };
     setFilters(next);
     if (name === 'q') {
-      trackEvent('closet_search', { query: value });
+      trackEvent('closet_search', { queryLength: (value || '').trim().length });
     }
   };
 
@@ -159,7 +159,7 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
       </Row>
       {totalPages > 1 ? (
         <Pagination className="mt-4">
-          <Pagination.Prev disabled={filters.page <= 0} onClick={() => onFilterChange('page', filters.page - 1)} />
+          <Pagination.Prev disabled={filters.page === 0} onClick={() => onFilterChange('page', filters.page - 1)} />
           <Pagination.Item active>{filters.page + 1}</Pagination.Item>
           <Pagination.Next disabled={filters.page + 1 >= totalPages} onClick={() => onFilterChange('page', filters.page + 1)} />
         </Pagination>

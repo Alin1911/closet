@@ -4,7 +4,7 @@ import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import ClosetGridSkeleton from '../common/ClosetGridSkeleton';
 
-export default function Home({closets, loading, error, recentlyViewedClosets, onTrackViewed, onToggleFavorite, authUser}) {
+export default function Home({closets, loading, error, recentlyViewedClosets, onTrackViewed, onToggleFavorite, authUser, onNotify}) {
   if (loading) {
     return <Container className="py-4"><ClosetGridSkeleton /></Container>;
   }
@@ -33,7 +33,7 @@ export default function Home({closets, loading, error, recentlyViewedClosets, on
                   <div className="d-flex gap-2 flex-wrap">
                     <Button as={Link} to={`/closets/${item.id}`} variant="outline-info" onClick={() => onTrackViewed(item.id)}>View details</Button>
                      <Button as={Link} to={`/coats/${item.id}`} variant="outline-light" onClick={() => onTrackViewed(item.id)}>View items</Button>
-                     <Button variant={authUser?.favoriteClosetIds?.includes(item.id) ? 'warning' : 'outline-warning'} onClick={async () => { try { await onToggleFavorite(item.id); } catch (_) {} }} disabled={!authUser}>
+                     <Button variant={authUser?.favoriteClosetIds?.includes(item.id) ? 'warning' : 'outline-warning'} onClick={async () => { try { const message = await onToggleFavorite(item.id); onNotify?.(message); } catch (error) { onNotify?.(error?.message || 'Could not update saved closets.'); } }} disabled={!authUser}>
                        {authUser?.favoriteClosetIds?.includes(item.id) ? 'Saved' : 'Save'}
                      </Button>
                   </div>
