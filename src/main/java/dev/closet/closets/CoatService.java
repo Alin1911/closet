@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 
@@ -16,18 +17,16 @@ public class CoatService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public Coat createCoat(String name, String description, List<String> images, String id) {
-        Coat coat = coatRepository.insert(new Coat(name, description, images));
+    public Coat createCoat(CoatCreateRequest payload) {
+        List<String> images = payload.images() == null ? List.of() : payload.images();
+        Coat coat = coatRepository.insert(new Coat(payload.name(), payload.description(), images));
 
-        mongoTemplate.update(Closet.class)
-                .matching(Criteria.where("id").is(id))
-                .apply(new Update().push("coatsIds").value(coat))
-                .first();
-
+        if (payload.closetId() != null && ObjectId.isValid(payload.closetId())) {
+            mongoTemplate.update(Closet.class)
+                    .matching(Criteria.where("_id").is(new ObjectId(payload.closetId())))
+                    .apply(new Update().push("coatsIds").value(coat))
+                    .first();
+        }
         return coat;
-    }
-
-    public Coat createCoat(String name, String description, List<String> images) {
-        return coatRepository.insert(new Coat(name, description, images));
     }
 }

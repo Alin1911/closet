@@ -1,0 +1,9 @@
+.coats-page .btn {
+  min-height: 44px;
+}
+
+@media only screen and (max-width: 800px) {
+  .coats-page {
+    padding-bottom: 16px;
+  }
+}
