@@ -6,6 +6,7 @@ public record AuthResponse(
         String userId,
         String email,
         String displayName,
-        List<String> favoriteClosetIds
+        List<String> favoriteClosetIds,
+        String token
 ) {
 }

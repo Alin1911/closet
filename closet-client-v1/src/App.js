@@ -11,6 +11,9 @@ import Browse from './components/browse/Browse';
 import Saved from './components/saved/Saved';
 import Profile from './components/profile/Profile';
 import ClosetDetail from './components/closetDetail/ClosetDetail';
+import { Toast, ToastContainer } from 'react-bootstrap';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import { trackEvent } from './utils/analytics';
 
 function App() {
   const [closets, setClosets] = useState([]);
@@ -29,6 +32,7 @@ function App() {
     const raw = localStorage.getItem('closetRecentlyViewed');
     return raw ? JSON.parse(raw) : [];
   });
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   const updateAuthUser = (user) => {
     setAuthUser(user);
@@ -37,6 +41,21 @@ function App() {
     } else {
       localStorage.removeItem('closetAuthUser');
     }
+  };
+
+  useEffect(() => {
+    if (authUser?.token) {
+      api.defaults.headers.common.Authorization = `Bearer ${authUser.token}`;
+    } else {
+      delete api.defaults.headers.common.Authorization;
+    }
+  }, [authUser?.token]);
+
+  const showToast = (message) => {
+    if (!message) {
+      return;
+    }
+    setToast({ show: true, message });
   };
 
   const getClosets = async (filters = {}) => {
@@ -90,6 +109,7 @@ function App() {
     setRecentlyViewedIds((prev) => {
       const next = [closetId, ...prev.filter((id) => id !== closetId)].slice(0, 8);
       localStorage.setItem('closetRecentlyViewed', JSON.stringify(next));
+      trackEvent('closet_viewed', { closetId });
       return next;
     });
   };
@@ -98,24 +118,41 @@ function App() {
     if (!user) {
       return;
     }
-    updateAuthUser(user);
+    updateAuthUser({
+      ...authUser,
+      ...user,
+      token: user.token || authUser?.token
+    });
   };
 
   const handleRegister = async (payload) => {
     const response = await api.post('/api/v1/auth/register', payload);
     syncUserFromResponse(response?.data?.data);
+    trackEvent('register_success');
     return response?.data?.message || 'Registered successfully.';
   };
 
   const handleLogin = async (payload) => {
     const response = await api.post('/api/v1/auth/login', payload);
     syncUserFromResponse(response?.data?.data);
+    trackEvent('login_success');
     return response?.data?.message || 'Logged in successfully.';
   };
 
   const handleLogout = () => {
     updateAuthUser(null);
     setSavedClosets([]);
+    trackEvent('logout');
+  };
+
+  const handleProfileUpdate = async (payload) => {
+    if (!authUser?.userId) {
+      throw new Error('Please log in first.');
+    }
+    const response = await api.put(`/api/v1/users/${authUser.userId}/profile`, payload);
+    syncUserFromResponse(response?.data?.data);
+    trackEvent('profile_updated');
+    return response?.data?.message || 'Profile updated.';
   };
 
   const refreshSavedClosets = useCallback(async () => {
@@ -142,6 +179,7 @@ function App() {
     const response = isSaved ? await api.delete(endpoint) : await api.put(endpoint);
     syncUserFromResponse(response?.data?.data);
     await refreshSavedClosets();
+    trackEvent(isSaved ? 'closet_unsaved' : 'closet_saved', { closetId });
     return response?.data?.message || (isSaved ? 'Removed from saved.' : 'Saved.');
   };
 
@@ -151,16 +189,21 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout/>}>
           <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} />} />
-          <Route path="/browse" element={<Browse closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onRefreshClosets={getClosets} />} />
-          <Route path="/saved" element={<Saved closets={savedClosets} loading={closetsLoading} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} />} />
-          <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} />} />
-          <Route path="/closets/:closetId" element={<ClosetDetail closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} />} />
+          <Route path="/browse" element={<Browse closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
+          <Route path="/saved" element={<ProtectedRoute authUser={authUser}><Saved closets={savedClosets} loading={closetsLoading} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} onNotify={showToast} /></ProtectedRoute>} />
+          <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} onUpdateProfile={handleProfileUpdate} onNotify={showToast} />} />
+          <Route path="/closets/:closetId" element={<ClosetDetail closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path='/trailer/:ytTrailerId' element={<Trailer/>} />
           <Route path='/Trailer/:ytTrailerId' element={<Trailer/>} />
-          <Route path="/coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} loading={closetLoading} error={closetError} onTrackViewed={trackRecentlyViewed} />} />
-          <Route path="/Coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} loading={closetLoading} error={closetError} onTrackViewed={trackRecentlyViewed} />} />
+          <Route path="/coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} loading={closetLoading} error={closetError} onTrackViewed={trackRecentlyViewed} onNotify={showToast} />} />
+          <Route path="/Coats/:closetId" element={<Coats getClosetData={getClosetData} closet={closet} coats={coats} setCoats={setCoats} loading={closetLoading} error={closetError} onTrackViewed={trackRecentlyViewed} onNotify={showToast} />} />
         </Route>
       </Routes>
+      <ToastContainer position="bottom-end" className="p-3">
+        <Toast bg="dark" onClose={() => setToast({ show: false, message: '' })} show={toast.show} delay={2500} autohide>
+          <Toast.Body className="text-light">{toast.message}</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 }

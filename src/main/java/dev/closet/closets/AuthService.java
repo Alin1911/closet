@@ -21,6 +21,11 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private TokenService tokenService;
+
+    private static final long SESSION_TTL_SECONDS = 60L * 60L * 24L * 7L;
+
     public Optional<AuthResponse> register(AuthRegisterRequest request) {
         String email = request.email().trim().toLowerCase();
         if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
@@ -36,14 +41,14 @@ public class AuthService {
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
         UserProfile saved = userRepository.insert(user);
-        return Optional.of(toResponse(saved));
+        return Optional.of(issueSession(saved));
     }
 
     public Optional<AuthResponse> login(AuthLoginRequest request) {
         String email = request.email().trim().toLowerCase();
         return userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))
-                .map(this::toResponse);
+                .map(this::issueSession);
     }
 
     public Optional<List<Closet>> getFavorites(ObjectId userId) {
@@ -87,7 +92,41 @@ public class AuthService {
         return Optional.of(toResponse(userRepository.save(user)));
     }
 
+    public Optional<AuthResponse> updateProfile(ObjectId userId, ProfileUpdateRequest request) {
+        return userRepository.findById(userId).map(user -> {
+            if (request.displayName() != null && !request.displayName().isBlank()) {
+                user.setDisplayName(request.displayName().trim());
+            }
+            if (request.password() != null && !request.password().isBlank()) {
+                user.setPasswordHash(passwordEncoder.encode(request.password()));
+            }
+            user.setUpdatedAt(Instant.now());
+            return toResponse(userRepository.save(user));
+        });
+    }
+
+    public Optional<UserProfile> resolveUserByToken(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) {
+            return Optional.empty();
+        }
+        String hash = tokenService.hashToken(rawToken.trim());
+        return userRepository.findBySessionTokenHashAndSessionExpiresAtAfter(hash, Instant.now());
+    }
+
+    private AuthResponse issueSession(UserProfile user) {
+        String token = tokenService.generateRawToken();
+        user.setSessionTokenHash(tokenService.hashToken(token));
+        user.setSessionExpiresAt(Instant.now().plusSeconds(SESSION_TTL_SECONDS));
+        user.setUpdatedAt(Instant.now());
+        UserProfile saved = userRepository.save(user);
+        return toResponse(saved, token);
+    }
+
     private AuthResponse toResponse(UserProfile user) {
+        return toResponse(user, null);
+    }
+
+    private AuthResponse toResponse(UserProfile user, String token) {
         List<String> favoriteIds = user.getFavoriteClosetIds() == null
                 ? List.of()
                 : user.getFavoriteClosetIds().stream().map(ObjectId::toHexString).toList();
@@ -95,7 +134,8 @@ public class AuthService {
                 user.getId().toHexString(),
                 user.getEmail(),
                 user.getDisplayName(),
-                favoriteIds
+                favoriteIds,
+                token
         );
     }
 }

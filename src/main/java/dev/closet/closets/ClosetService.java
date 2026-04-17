@@ -22,6 +22,24 @@ public class ClosetService {
     private CoatRepository coatRepository;
 
     public List<Closet> allClosets(String style, String season, String color, String sort){
+        return filterAndSort(style, season, color, sort, null);
+    }
+
+    public ClosetPageResponse allClosetsPage(String style, String season, String color, String sort, String query, int page, int size) {
+        List<Closet> filtered = filterAndSort(style, season, color, sort, query);
+        if (size <= 0) {
+            size = 12;
+        }
+        if (page < 0) {
+            page = 0;
+        }
+        int start = Math.min(page * size, filtered.size());
+        int end = Math.min(start + size, filtered.size());
+        int totalPages = filtered.isEmpty() ? 0 : (int) Math.ceil((double) filtered.size() / size);
+        return new ClosetPageResponse(filtered.subList(start, end), filtered.size(), page, size, totalPages);
+    }
+
+    private List<Closet> filterAndSort(String style, String season, String color, String sort, String query) {
         Stream<Closet> stream = closetRepository.findAll().stream();
 
         if (style != null && !style.isBlank()) {
@@ -37,6 +55,14 @@ public class ClosetService {
         if (color != null && !color.isBlank()) {
             String colorFilter = color.trim().toLowerCase();
             stream = stream.filter(closet -> closet.getColor() != null && closet.getColor().trim().toLowerCase().equals(colorFilter));
+        }
+
+        if (query != null && !query.isBlank()) {
+            String q = query.trim().toLowerCase();
+            stream = stream.filter(closet ->
+                    (closet.getName() != null && closet.getName().toLowerCase().contains(q)) ||
+                            (closet.getDescription() != null && closet.getDescription().toLowerCase().contains(q))
+            );
         }
 
         Comparator<Closet> comparator = Comparator.comparing(

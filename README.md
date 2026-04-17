@@ -29,14 +29,18 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Saved closets/favorites per user profile
 - Recently viewed / continue browsing on Home
 - Auth/profile basics (register/login) wired to header actions
+- Token-based auth sessions with guarded routes for saved/profile/favorites and write APIs
+- Profile editing (display name/password) for authenticated users
+- Search + pagination support for closets API and browse UI
+- Toast feedback + skeleton loading states across core screens
 - DTO validation + consistent API response envelope for write/auth flows
 - REST API with Spring Web + Spring Data MongoDB, CORS enabled for `http://localhost:3000`
+- OpenAPI docs (`/swagger-ui/index.html`) and Actuator health/metrics
+- GitHub Actions CI quality gates for backend and frontend
 
 ### Known current gaps in implementation
-- Auth is basic and does not include JWT/session management or route protection
-- API docs (OpenAPI/Swagger) are not added yet
-- Search/pagination/ranking are not implemented yet
 - Automated test coverage is still limited (especially backend controller/service tests)
+- Search ranking and relevance scoring are still basic
 
 ### Proposed new features (high-impact, realistic)
 - **[Next] Auth hardening** (token/session, guarded routes, profile editing)
@@ -249,7 +253,7 @@ CI=true npm test -- --watchAll=false --passWithNoTests
 ## API Snapshot
 
 Closets:
-- `GET /api/v1/closets` → list closets (`style`, `season`, `color`, `sort` query params supported)
+- `GET /api/v1/closets` → list closets (`style`, `season`, `color`, `sort`, `q`, `page`, `size` query params supported)
 - `GET /api/v1/closets/{id}` → get single closet
 - `GET /api/v1/closets/imdb/{imdbId}` → legacy get-by-id route kept for compatibility
 - `POST /api/v1/closets` → create closet
@@ -265,9 +269,12 @@ Coat notes:
 Auth/profile + favorites:
 - `POST /api/v1/auth/register` → register user
 - `POST /api/v1/auth/login` → login user
+- `PUT /api/v1/users/{userId}/profile` → update display name/password (auth required)
 - `GET /api/v1/users/{userId}/favorites` → list saved closets
 - `PUT /api/v1/users/{userId}/favorites/{closetId}` → save closet
 - `DELETE /api/v1/users/{userId}/favorites/{closetId}` → remove saved closet
+
+Protected API calls require: `Authorization: Bearer <token>`
 
 ---
 

@@ -4,10 +4,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button, Container, Row, Col, Form } from "react-bootstrap";
 import CoatForm from  '../coatForm/CoatForm'
 import './Coats.css'
+import ClosetGridSkeleton from "../common/ClosetGridSkeleton";
 
 import React from 'react'
 
-export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, onTrackViewed}) => {
+export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, onTrackViewed, onNotify}) => {
     
     const coatText = useRef();
     const [submitError, setSubmitError] = useState('');
@@ -46,6 +47,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
             const updatedCoats = [...coats, created];
             coat.value = "";
             setCoats(updatedCoats);
+            onNotify?.(response?.data?.message || 'Item note created.');
           } catch (error) {
             console.error(error);
             setSubmitError('Could not save your note. Please try again.');
@@ -80,6 +82,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
         const updated = response?.data?.data;
         setCoats(coats.map((item) => item.id === coat.id ? updated : item));
         cancelEdit();
+        onNotify?.(response?.data?.message || 'Item note updated.');
       } catch (err) {
         console.error(err);
         setEditError('Could not update this note.');
@@ -88,8 +91,9 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
 
     const deleteCoat = async (coatId) => {
       try {
-        await api.delete(`/api/v1/closets/${closetId}/coats/${coatId}`);
+        const response = await api.delete(`/api/v1/closets/${closetId}/coats/${coatId}`);
         setCoats(coats.filter((item) => item.id !== coatId));
+        onNotify?.(response?.data?.message || 'Item note deleted.');
       } catch (err) {
         console.error(err);
         setEditError('Could not delete this note.');
@@ -97,7 +101,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
     };
 
     if (loading) {
-      return <p className="text-center mt-5">Loading items...</p>;
+      return <Container className="py-4"><ClosetGridSkeleton count={2} /></Container>;
     }
 
     if (error) {
