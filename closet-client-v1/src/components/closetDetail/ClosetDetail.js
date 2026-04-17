@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { Badge, Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import ClosetGridSkeleton from '../common/ClosetGridSkeleton';
 
-export default function ClosetDetail({ closets, loading, error, onTrackViewed, onToggleFavorite, authUser }) {
+export default function ClosetDetail({ closets, loading, error, onTrackViewed, onToggleFavorite, authUser, onNotify }) {
   const navigate = useNavigate();
   const { closetId } = useParams();
   const closet = closets.find((item) => item.id === closetId);
@@ -14,7 +15,7 @@ export default function ClosetDetail({ closets, loading, error, onTrackViewed, o
   }, [closetId, onTrackViewed]);
 
   if (loading) {
-    return <p className="text-center mt-5">Loading closet details...</p>;
+    return <Container className="py-4"><ClosetGridSkeleton count={2} /></Container>;
   }
 
   if (error) {
@@ -58,7 +59,7 @@ export default function ClosetDetail({ closets, loading, error, onTrackViewed, o
           <div className="d-flex gap-2 flex-wrap">
             <Button as={Link} to={`/coats/${closet.id}`} variant="info">View items</Button>
             {trailerId ? <Button as={Link} to={`/trailer/${trailerId}`} variant="outline-light">Watch lookbook</Button> : null}
-            <Button variant={isSaved ? 'warning' : 'outline-warning'} onClick={() => onToggleFavorite(closet.id)} disabled={!authUser}>
+            <Button variant={isSaved ? 'warning' : 'outline-warning'} onClick={async () => { try { const message = await onToggleFavorite(closet.id); onNotify?.(message); } catch (_) {} }} disabled={!authUser}>
               {isSaved ? 'Saved' : 'Save closet'}
             </Button>
           </div>

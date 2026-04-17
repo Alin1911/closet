@@ -2,6 +2,7 @@ package dev.closet.closets;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/closets")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = {"X-Total-Count", "X-Total-Pages", "X-Page", "X-Size"})
 public class ClosetController {
     @Autowired
     private ClosetService closetService;
@@ -23,8 +24,26 @@ public class ClosetController {
             @RequestParam(required = false) String style,
             @RequestParam(required = false) String season,
             @RequestParam(required = false) String color,
-            @RequestParam(required = false) String sort
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false, name = "q") String query,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
     ){
+        if (page != null || size != null || (query != null && !query.isBlank())) {
+            if (page != null && page < 0) {
+                return new ResponseEntity<>(List.of(), HttpStatus.BAD_REQUEST);
+            }
+            if (size != null && size <= 0) {
+                return new ResponseEntity<>(List.of(), HttpStatus.BAD_REQUEST);
+            }
+            ClosetPageResponse response = closetService.allClosetsPage(style, season, color, sort, query, page == null ? 0 : page, size == null ? 12 : size);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Total-Count", String.valueOf(response.totalCount()));
+            headers.add("X-Total-Pages", String.valueOf(response.totalPages()));
+            headers.add("X-Page", String.valueOf(response.page()));
+            headers.add("X-Size", String.valueOf(response.size()));
+            return new ResponseEntity<>(response.items(), headers, HttpStatus.OK);
+        }
         return new ResponseEntity<>(closetService.allClosets(style, season, color, sort), HttpStatus.OK);
     }
 

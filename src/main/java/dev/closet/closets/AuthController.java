@@ -5,6 +5,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,9 +32,12 @@ public class AuthController {
     }
 
     @GetMapping("/users/{userId}/favorites")
-    public ResponseEntity<?> getFavorites(@PathVariable String userId) {
+    public ResponseEntity<?> getFavorites(@PathVariable String userId, Authentication authentication) {
         if (!ObjectId.isValid(userId)) {
             return new ResponseEntity<>(new ApiResponse<>("Invalid user id.", List.of()), HttpStatus.BAD_REQUEST);
+        }
+        if (!isAuthorizedUser(authentication, userId)) {
+            return new ResponseEntity<>(new ApiResponse<>("Forbidden.", List.of()), HttpStatus.FORBIDDEN);
         }
 
         return authService.getFavorites(new ObjectId(userId))
@@ -42,9 +46,12 @@ public class AuthController {
     }
 
     @PutMapping("/users/{userId}/favorites/{closetId}")
-    public ResponseEntity<ApiResponse<AuthResponse>> addFavorite(@PathVariable String userId, @PathVariable String closetId) {
+    public ResponseEntity<ApiResponse<AuthResponse>> addFavorite(@PathVariable String userId, @PathVariable String closetId, Authentication authentication) {
         if (!ObjectId.isValid(userId) || !ObjectId.isValid(closetId)) {
             return new ResponseEntity<>(new ApiResponse<>("Invalid id.", null), HttpStatus.BAD_REQUEST);
+        }
+        if (!isAuthorizedUser(authentication, userId)) {
+            return new ResponseEntity<>(new ApiResponse<>("Forbidden.", null), HttpStatus.FORBIDDEN);
         }
 
         return authService.addFavorite(new ObjectId(userId), new ObjectId(closetId))
@@ -53,13 +60,42 @@ public class AuthController {
     }
 
     @DeleteMapping("/users/{userId}/favorites/{closetId}")
-    public ResponseEntity<ApiResponse<AuthResponse>> removeFavorite(@PathVariable String userId, @PathVariable String closetId) {
+    public ResponseEntity<ApiResponse<AuthResponse>> removeFavorite(@PathVariable String userId, @PathVariable String closetId, Authentication authentication) {
         if (!ObjectId.isValid(userId) || !ObjectId.isValid(closetId)) {
             return new ResponseEntity<>(new ApiResponse<>("Invalid id.", null), HttpStatus.BAD_REQUEST);
+        }
+        if (!isAuthorizedUser(authentication, userId)) {
+            return new ResponseEntity<>(new ApiResponse<>("Forbidden.", null), HttpStatus.FORBIDDEN);
         }
 
         return authService.removeFavorite(new ObjectId(userId), new ObjectId(closetId))
                 .map(response -> new ResponseEntity<>(new ApiResponse<>("Closet removed from saved.", response), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(new ApiResponse<>("User not found.", null), HttpStatus.NOT_FOUND));
+    }
+
+    @PutMapping("/users/{userId}/profile")
+    public ResponseEntity<ApiResponse<AuthResponse>> updateProfile(
+            @PathVariable String userId,
+            @Valid @RequestBody ProfileUpdateRequest request,
+            Authentication authentication
+    ) {
+        if (!ObjectId.isValid(userId)) {
+            return new ResponseEntity<>(new ApiResponse<>("Invalid user id.", null), HttpStatus.BAD_REQUEST);
+        }
+        if (!isAuthorizedUser(authentication, userId)) {
+            return new ResponseEntity<>(new ApiResponse<>("Forbidden.", null), HttpStatus.FORBIDDEN);
+        }
+        if ((request.displayName() == null || request.displayName().isBlank()) &&
+                (request.password() == null || request.password().isBlank())) {
+            return new ResponseEntity<>(new ApiResponse<>("Provide display name or password.", null), HttpStatus.BAD_REQUEST);
+        }
+
+        return authService.updateProfile(new ObjectId(userId), request)
+                .map(response -> new ResponseEntity<>(new ApiResponse<>("Profile updated.", response), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(new ApiResponse<>("User not found.", null), HttpStatus.NOT_FOUND));
+    }
+
+    private boolean isAuthorizedUser(Authentication authentication, String userId) {
+        return authentication != null && authentication.isAuthenticated() && userId.equals(authentication.getName());
     }
 }

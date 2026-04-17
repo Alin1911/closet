@@ -20,6 +20,8 @@ public class UserProfile {
     private String email;
     private String displayName;
     private String passwordHash;
+    private String sessionTokenHash;
+    private Instant sessionExpiresAt;
     private List<ObjectId> favoriteClosetIds;
     private Instant createdAt;
     private Instant updatedAt;
