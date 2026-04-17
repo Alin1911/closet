@@ -29,6 +29,7 @@ public class AuthService {
     private long sessionTtlSeconds;
 
     public Optional<AuthResponse> register(AuthRegisterRequest request) {
+        cleanupExpiredSessions();
         String email = request.email().trim().toLowerCase();
         if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             return Optional.empty();
@@ -47,6 +48,7 @@ public class AuthService {
     }
 
     public Optional<AuthResponse> login(AuthLoginRequest request) {
+        cleanupExpiredSessions();
         String email = request.email().trim().toLowerCase();
         return userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))
@@ -108,6 +110,7 @@ public class AuthService {
     }
 
     public Optional<UserProfile> resolveUserByToken(String rawToken) {
+        cleanupExpiredSessions();
         if (rawToken == null || rawToken.isBlank()) {
             return Optional.empty();
         }
@@ -139,5 +142,9 @@ public class AuthService {
                 favoriteIds,
                 token
         );
+    }
+
+    private void cleanupExpiredSessions() {
+        userRepository.deleteAllBySessionExpiresAtBefore(Instant.now());
     }
 }

@@ -17,8 +17,12 @@ import java.util.List;
 
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
+    private final AuthService authService;
+
     @Autowired
-    private AuthService authService;
+    public AuthTokenFilter(AuthService authService) {
+        this.authService = authService;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {

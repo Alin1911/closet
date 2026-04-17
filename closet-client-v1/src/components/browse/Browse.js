@@ -12,7 +12,7 @@ const DEFAULT_FILTERS = {
   sort: 'newest',
   q: '',
   page: 0,
-  size: 9
+  size: 12
 };
 
 export default function Browse({ loading, error, onTrackViewed, onToggleFavorite, authUser, onNotify }) {
