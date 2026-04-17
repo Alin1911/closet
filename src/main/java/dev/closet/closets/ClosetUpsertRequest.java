@@ -5,14 +5,18 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record CoatCreateRequest(
-        String closetId,
+public record ClosetUpsertRequest(
         @NotBlank(message = "Name is required.")
         @Size(max = 120, message = "Name must be at most 120 characters.")
         String name,
         @NotBlank(message = "Description is required.")
         @Size(max = 1000, message = "Description must be at most 1000 characters.")
         String description,
-        List<String> images
+        String poster,
+        String trailerLink,
+        List<String> images,
+        String style,
+        String season,
+        String color
 ) {
 }

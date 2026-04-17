@@ -7,6 +7,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.util.List;
 
 @Document(collection  = "clothes")
@@ -19,6 +20,8 @@ public class Coat {
     private List<String> images;
     private String name;
     private String description;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     public Coat(String name, String description, List<String> images) {
         this.name = name;

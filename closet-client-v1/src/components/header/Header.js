@@ -6,7 +6,7 @@ import  Nav  from 'react-bootstrap/Nav'
 import  Navbar  from 'react-bootstrap/Navbar'
 import { NavLink } from 'react-router-dom'
 
-function Header() {
+function Header({ authUser, onLogout }) {
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
         <Container>
@@ -22,9 +22,17 @@ function Header() {
                     >
                     <NavLink className="nav-link" to="/">Home</NavLink>
                     <NavLink className="nav-link" to="/browse">Browse</NavLink>
+                    <NavLink className="nav-link" to="/saved">Saved</NavLink>
+                    <NavLink className="nav-link" to="/profile">Profile</NavLink>
                 </Nav>
-                <Button variant="outline-info" className="me-2">Login</Button>
-                <Button variant="outline-info" className='me-2'>Register</Button>
+                {!authUser ? (
+                  <>
+                    <Button as={NavLink} to="/profile" variant="outline-info" className="me-2">Login</Button>
+                    <Button as={NavLink} to="/profile" variant="outline-info" className='me-2'>Register</Button>
+                  </>
+                ) : (
+                  <Button variant="outline-warning" className='me-2' onClick={onLogout}>Logout</Button>
+                )}
             </Navbar.Collapse>
         </Container>
     </Navbar>

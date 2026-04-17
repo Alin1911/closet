@@ -3,16 +3,10 @@ import Carousel from 'react-material-ui-carousel'
 import { Paper } from '@mui/material'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons'
-import { Link , useNavigate} from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from 'react-bootstrap'
-
- const Hero = ({closets}) => {
-
-    const navigate = useNavigate();
-
-    function coats(closetId){
-        navigate(`/coats/${closetId}`);
-    }
+ 
+ const Hero = ({closets, onTrackViewed}) => {
 
   return (
     <div>
@@ -43,13 +37,13 @@ import { Button } from 'react-bootstrap'
                                                     <span className='lookbook-label'>Watch lookbook</span>
                                                 </div>
                                             </Link>
-                                            ) : null}
-                                            <div className='closet-coat-button-container'>
-                                                <Button variant="info" className='closet-action-btn' onClick={() => coats(closet.id)}>View items</Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                             ) : null}
+                                             <div className='closet-coat-button-container'>
+                                                <Button as={Link} to={`/closets/${closet.id}`} variant="info" className='closet-action-btn' onClick={() => onTrackViewed?.(closet.id)}>View details</Button>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
                             </div>
                         </Paper>
                      )
