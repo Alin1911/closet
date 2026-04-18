@@ -45,7 +45,7 @@ export default function Saved({ closets, authUser, loading, onTrackViewed, onTog
                           const message = await onToggleFavorite(item.id);
                           onNotify?.(message);
                         } catch (error) {
-                          onNotify?.(error?.message || 'Could not update saved closets.');
+                          onNotify?.(error?.message || 'Failed to remove closet from saved list. Please try again.');
                         }
                       }}
                     >
