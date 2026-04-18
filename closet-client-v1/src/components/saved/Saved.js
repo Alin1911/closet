@@ -38,7 +38,19 @@ export default function Saved({ closets, authUser, loading, onTrackViewed, onTog
                     <Button as={Link} to={`/closets/${item.id}`} variant="info" onClick={() => onTrackViewed(item.id)}>View details</Button>
                     <Button as={Link} to={`/coats/${item.id}`} variant="outline-info" onClick={() => onTrackViewed(item.id)}>View items</Button>
                     {trailerId ? <Button as={Link} to={`/trailer/${trailerId}`} variant="outline-light">Watch lookbook</Button> : null}
-                    <Button variant="warning" onClick={async () => { const message = await onToggleFavorite(item.id); onNotify?.(message); }}>Remove from saved</Button>
+                    <Button
+                      variant="warning"
+                      onClick={async () => {
+                        try {
+                          const message = await onToggleFavorite(item.id);
+                          onNotify?.(message);
+                        } catch (error) {
+                          onNotify?.(error?.message || 'Failed to remove closet from saved list. Please try again.');
+                        }
+                      }}
+                    >
+                      Remove from saved
+                    </Button>
                   </div>
                 </Card.Body>
               </Card>
