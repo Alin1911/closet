@@ -1,6 +1,8 @@
 package dev.closet.closets;
 
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,11 +27,17 @@ public class ClosetService {
     @Autowired
     private CoatRepository coatRepository;
 
+    @Autowired(required = false)
+    private io.micrometer.core.instrument.MeterRegistry meterRegistry;
+
     public List<Closet> allClosets(String style, String season, String color, String sort){
-        return filterAndSort(style, season, color, sort, null);
+        List<Closet> closets = filterAndSort(style, season, color, sort, null);
+        recordBrowseMetrics("list", false, closets.size());
+        return closets;
     }
 
     public ClosetPageResponse allClosetsPage(String style, String season, String color, String sort, String query, int page, int size) {
+        boolean hasQuery = query != null && !query.isBlank();
         List<Closet> filtered = filterAndSort(style, season, color, sort, query);
         Map<String, Long> styleCounts = buildFacetCounts(filtered, Closet::getStyle);
         Map<String, Long> seasonCounts = buildFacetCounts(filtered, Closet::getSeason);
@@ -43,6 +51,7 @@ public class ClosetService {
         int start = Math.min(page * size, filtered.size());
         int end = Math.min(start + size, filtered.size());
         int totalPages = filtered.isEmpty() ? 0 : (int) Math.ceil((double) filtered.size() / size);
+        recordBrowseMetrics("page", hasQuery, filtered.size());
         return new ClosetPageResponse(filtered.subList(start, end), filtered.size(), page, size, totalPages, styleCounts, seasonCounts, colorCounts);
     }
 
@@ -212,5 +221,24 @@ public class ClosetService {
                 .map(fieldAccessor)
                 .filter(value -> value != null && !value.isBlank())
                 .collect(Collectors.groupingBy(String::trim, LinkedHashMap::new, Collectors.counting()));
+    }
+
+    private void recordBrowseMetrics(String mode, boolean hasQuery, int resultCount) {
+        if (meterRegistry == null) {
+            return;
+        }
+        Counter.builder("closet.browse.requests")
+                .description("Closet browse/list request volume")
+                .tag("mode", mode)
+                .tag("query", String.valueOf(hasQuery))
+                .register(meterRegistry)
+                .increment();
+        DistributionSummary.builder("closet.browse.result.count")
+                .description("Result sizes returned from closet browse endpoints")
+                .baseUnit("items")
+                .tag("mode", mode)
+                .tag("query", String.valueOf(hasQuery))
+                .register(meterRegistry)
+                .record(resultCount);
     }
 }
