@@ -71,11 +71,11 @@ export default function Profile({ authUser, onLogin, onRegister, onUpdateProfile
           <p className="mb-1">{authUser.email}</p>
           <small>Saved closets: {authUser.favoriteClosetIds?.length || 0}</small>
           <Form className="mt-3" onSubmit={updateProfile}>
-            <Form.Group className="mb-2">
+            <Form.Group className="mb-2" controlId="profile-display-name">
               <Form.Label>Display name</Form.Label>
               <Form.Control value={profileDisplayName} onChange={(e) => setProfileDisplayName(e.target.value)} />
             </Form.Group>
-            <Form.Group className="mb-2">
+            <Form.Group className="mb-2" controlId="profile-password">
               <Form.Label>New password (optional)</Form.Label>
               <Form.Control type="password" value={profilePassword} onChange={(e) => setProfilePassword(e.target.value)} minLength={8} />
             </Form.Group>
@@ -95,16 +95,16 @@ export default function Profile({ authUser, onLogin, onRegister, onUpdateProfile
             </div>
             <Form onSubmit={submit}>
               {mode === 'register' ? (
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-3" controlId="register-display-name">
                   <Form.Label>Display name</Form.Label>
                   <Form.Control value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
                 </Form.Group>
               ) : null}
-              <Form.Group className="mb-3">
+              <Form.Group className="mb-3" controlId="auth-email">
                 <Form.Label>Email</Form.Label>
                 <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </Form.Group>
-              <Form.Group className="mb-3">
+              <Form.Group className="mb-3" controlId="auth-password">
                 <Form.Label>Password</Form.Label>
                 <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
               </Form.Group>
