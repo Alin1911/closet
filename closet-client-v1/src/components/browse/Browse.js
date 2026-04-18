@@ -238,6 +238,9 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
           <Pagination.Next disabled={filters.page + 1 >= totalPages} onClick={() => onFilterChange('page', filters.page + 1)} />
           <Form className="d-flex align-items-center gap-2 ms-2" onSubmit={(e) => {
             e.preventDefault();
+            if (!pageInput) {
+              return;
+            }
             const targetPage = Number(pageInput) - 1;
             if (!Number.isNaN(targetPage) && targetPage >= 0 && targetPage < totalPages) {
               onFilterChange('page', targetPage);
@@ -248,6 +251,7 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
               size="sm"
               style={{ width: 70 }}
               value={pageInput}
+              placeholder="1"
               inputMode="numeric"
               aria-label="Jump to page"
               onChange={(e) => setPageInput(e.target.value.replace(/[^\d]/g, ''))}

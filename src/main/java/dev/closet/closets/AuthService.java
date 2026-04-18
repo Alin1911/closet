@@ -32,7 +32,6 @@ public class AuthService {
     private long refreshTokenTtlSeconds;
 
     public Optional<AuthResponse> register(AuthRegisterRequest request) {
-        cleanupExpiredTokens();
         String email = request.email().trim().toLowerCase();
         if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             return Optional.empty();
@@ -51,7 +50,6 @@ public class AuthService {
     }
 
     public Optional<AuthResponse> login(AuthLoginRequest request) {
-        cleanupExpiredTokens();
         String email = request.email().trim().toLowerCase();
         return userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))
@@ -59,7 +57,6 @@ public class AuthService {
     }
 
     public Optional<AuthResponse> refresh(AuthRefreshRequest request) {
-        cleanupExpiredTokens();
         String hash = tokenService.hashToken(request.refreshToken().trim());
         return userRepository.findByRefreshTokenHashAndRefreshTokenExpiresAtAfter(hash, Instant.now())
                 .map(this::issueSession);
@@ -135,7 +132,6 @@ public class AuthService {
     }
 
     public Optional<UserProfile> resolveUserByToken(String rawToken) {
-        cleanupExpiredTokens();
         if (rawToken == null || rawToken.isBlank()) {
             return Optional.empty();
         }
@@ -172,20 +168,5 @@ public class AuthService {
                 token,
                 refreshToken
         );
-    }
-
-    private void cleanupExpiredTokens() {
-        Instant now = Instant.now();
-        userRepository.findAll().stream()
-                .filter(user -> (user.getAccessTokenExpiresAt() != null && user.getAccessTokenExpiresAt().isBefore(now))
-                        || (user.getRefreshTokenExpiresAt() != null && user.getRefreshTokenExpiresAt().isBefore(now)))
-                .forEach(user -> {
-                    user.setAccessTokenHash(null);
-                    user.setAccessTokenExpiresAt(null);
-                    user.setRefreshTokenHash(null);
-                    user.setRefreshTokenExpiresAt(null);
-                    user.setUpdatedAt(now);
-                    userRepository.save(user);
-                });
     }
 }

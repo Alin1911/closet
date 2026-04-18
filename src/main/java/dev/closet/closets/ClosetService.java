@@ -158,8 +158,7 @@ public class ClosetService {
         int score = 0;
         if (name != null && name.equals(query)) {
             score += 120;
-        }
-        if (name != null && name.contains(query)) {
+        } else if (name != null && name.contains(query)) {
             score += 80;
         }
         if (description != null && description.contains(query)) {
