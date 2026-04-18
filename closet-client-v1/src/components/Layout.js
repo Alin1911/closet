@@ -4,9 +4,9 @@ import React from 'react';
 
 const Layout = () => {
     return (
-        <div>
-        <Outlet/>
-        </div>
+        <main id="main-content" role="main">
+            <Outlet/>
+        </main>
     );
 }
 

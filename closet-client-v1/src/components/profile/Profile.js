@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Profile({ authUser, onLogin, onRegister, onUpdateProfile, onNotify }) {
-  const [mode, setMode] = useState('login');
+  const [searchParams] = useSearchParams();
+  const modeParam = searchParams.get('mode') === 'register' ? 'register' : 'login';
+  const [mode, setMode] = useState(modeParam);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -15,6 +18,10 @@ export default function Profile({ authUser, onLogin, onRegister, onUpdateProfile
   useEffect(() => {
     setProfileDisplayName(authUser?.displayName || '');
   }, [authUser?.displayName]);
+
+  useEffect(() => {
+    setMode(modeParam);
+  }, [modeParam]);
 
   const submit = async (e) => {
     e.preventDefault();

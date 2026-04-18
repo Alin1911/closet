@@ -8,7 +8,7 @@ import { NavLink } from 'react-router-dom'
 
 function Header({ authUser, onLogout }) {
   return (
-    <Navbar bg="dark" variant="dark" expand="lg">
+    <Navbar bg="dark" variant="dark" expand="lg" as="header" aria-label="Primary">
         <Container>
             <Navbar.Brand as={NavLink} to="/" style={{ "color" : 'gold'}}>
                 <FontAwesomeIcon icon={faVideoSlash} /> Closet
@@ -27,8 +27,8 @@ function Header({ authUser, onLogout }) {
                 </Nav>
                 {!authUser ? (
                   <>
-                    <Button as={NavLink} to="/profile" variant="outline-info" className="me-2">Login</Button>
-                    <Button as={NavLink} to="/profile" variant="outline-info" className='me-2'>Register</Button>
+                    <Button as={NavLink} to="/profile?mode=login" variant="outline-info" className="me-2">Login</Button>
+                    <Button as={NavLink} to="/profile?mode=register" variant="outline-info" className='me-2'>Register</Button>
                   </>
                 ) : (
                   <Button variant="outline-warning" className='me-2' onClick={onLogout}>Logout</Button>
