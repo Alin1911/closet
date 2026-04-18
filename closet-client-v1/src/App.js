@@ -1,6 +1,6 @@
 import './App.css';
 import api from './api/axiosConfig';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Layout from './components/Layout';
 import {Routes, Route} from 'react-router-dom';
 import Home from './components/home/Home'
@@ -33,6 +33,7 @@ function App() {
     return raw ? JSON.parse(raw) : [];
   });
   const [toast, setToast] = useState({ show: false, message: '' });
+  const refreshInFlightRef = useRef(null);
 
   const updateAuthUser = (user) => {
     setAuthUser(user);
@@ -121,9 +122,60 @@ function App() {
     updateAuthUser({
       ...authUser,
       ...user,
-      token: user.token || authUser?.token
+      token: user.token || authUser?.token,
+      refreshToken: user.refreshToken || authUser?.refreshToken
     });
   };
+
+  const refreshAuthToken = useCallback(async () => {
+    if (!authUser?.refreshToken) {
+      throw new Error('Missing refresh token');
+    }
+    if (!refreshInFlightRef.current) {
+      refreshInFlightRef.current = api
+        .post('/api/v1/auth/refresh', { refreshToken: authUser.refreshToken }, { _skipAuthRefresh: true })
+        .then((response) => {
+          syncUserFromResponse(response?.data?.data);
+          return response?.data?.data;
+        })
+        .finally(() => {
+          refreshInFlightRef.current = null;
+        });
+    }
+    return refreshInFlightRef.current;
+  }, [authUser?.refreshToken]);
+
+  useEffect(() => {
+    const interceptorId = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error?.config;
+        if (
+          error?.response?.status !== 401 ||
+          !authUser?.refreshToken ||
+          originalRequest?._retry ||
+          originalRequest?._skipAuthRefresh
+        ) {
+          return Promise.reject(error);
+        }
+        originalRequest._retry = true;
+        try {
+          const refreshed = await refreshAuthToken();
+          if (refreshed?.token) {
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers.Authorization = `Bearer ${refreshed.token}`;
+          }
+          return api(originalRequest);
+        } catch (refreshError) {
+          updateAuthUser(null);
+          return Promise.reject(refreshError);
+        }
+      }
+    );
+    return () => {
+      api.interceptors.response.eject(interceptorId);
+    };
+  }, [authUser?.refreshToken, refreshAuthToken]);
 
   const handleRegister = async (payload) => {
     const response = await api.post('/api/v1/auth/register', payload);
@@ -140,6 +192,9 @@ function App() {
   };
 
   const handleLogout = () => {
+    if (authUser?.token) {
+      api.post('/api/v1/auth/logout', {}, { _skipAuthRefresh: true }).catch(() => {});
+    }
     updateAuthUser(null);
     setSavedClosets([]);
     trackEvent('logout');
@@ -188,7 +243,7 @@ function App() {
       <Header authUser={authUser} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<Layout/>}>
-          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
+          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} onRetry={() => getClosets()} />} />
           <Route path="/browse" element={<Browse closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path="/saved" element={<ProtectedRoute authUser={authUser}><Saved closets={savedClosets} loading={closetsLoading} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} onNotify={showToast} /></ProtectedRoute>} />
           <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} onUpdateProfile={handleProfileUpdate} onNotify={showToast} />} />

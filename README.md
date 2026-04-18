@@ -29,9 +29,9 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Saved closets/favorites per user profile
 - Recently viewed / continue browsing on Home
 - Auth/profile basics (register/login) wired to header actions
-- Token-based auth sessions with guarded routes for saved/profile/favorites and write APIs
+- Token-based auth with access + refresh lifecycle (rotation + logout revocation) and guarded routes
 - Profile editing (display name/password) for authenticated users
-- Search + pagination support for closets API and browse UI
+- Search + pagination support with relevance ranking, typo tolerance, and faceted counts
 - Toast feedback + skeleton loading states across core screens
 - DTO validation + consistent API response envelope for write/auth flows
 - REST API with Spring Web + Spring Data MongoDB, CORS enabled for `http://localhost:3000`
@@ -39,13 +39,11 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - GitHub Actions CI quality gates for backend and frontend
 
 ### Known current gaps in implementation
-- Automated test coverage is still limited (especially backend controller/service tests)
-- Search ranking and relevance scoring are still basic
+- Automated test coverage is improved but still limited (especially backend controller/integration paths)
+- Observability remains basic (health/metrics present; tracing/alerting dashboards not yet implemented)
 
 ### Proposed new features (high-impact, realistic)
-- **[Next] Security maturity** (session revocation, refresh-token rotation, stricter policy controls)
-- **[Next] Search relevance upgrades** (ranking, typo tolerance, faceted counts)
-- **[Next] Broader automated test coverage** (backend controller/service + frontend interaction tests)
+- **[Next] Broader automated test coverage** (controller/integration depth, auth/session edge cases)
 - **[Next] Production observability depth** (dashboards, alerting, tracing)
 
 ---
@@ -53,7 +51,7 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 ## Architecture
 
 ### Backend
-- Framework: Spring Boot 3.3.0 (Java 22 target)
+- Framework: Spring Boot 3.3.0 (Java 17 target)
 - Modules:
   - Controllers: `ClosetController`, `CoatController`, `AuthController`
   - Services: `ClosetService`, `CoatService`, `AuthService`
@@ -122,9 +120,8 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 Most high-impact quick wins are implemented (IA, CTA clarity, basic loading/error/empty handling, mobile touch targets).
 
 Next UX opportunities:
-- Improve accessibility (focus management, keyboard navigation, richer ARIA coverage)
-- Add richer pagination navigation (direct page jump, visible page numbers)
-- Polish empty/error states with recovery-oriented actions
+- Expand accessibility coverage (keyboard flows, ARIA landmarks, contrast audits)
+- Continue polish of empty/error states and guided recovery flows
 
 ---
 
@@ -137,8 +134,10 @@ Next UX opportunities:
 - ✅ API docs (OpenAPI/Swagger)
 - ✅ CI quality gates (GitHub Actions backend/frontend checks)
 - ✅ Basic analytics event hooks for key UX actions
+- ✅ Security maturity baseline (refresh-token rotation + logout revocation + stricter route policy)
+- ✅ Search relevance baseline (weighted ranking + typo tolerance + faceted counts)
+- ✅ Broader automated test coverage baseline (backend service + frontend interaction tests)
 - ⏳ Centralized frontend query/state (React Query or equivalent)
-- ⏳ Broader automated test coverage
 - ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
 
 ---
@@ -164,7 +163,7 @@ Next UX opportunities:
 - ⏳ Domain naming cleanup/migration away from legacy movie-template artifacts
 - ✅ Search/filter platform with scalable pagination foundation
 - ✅ CI/CD quality gates baseline
-- ⏳ Broader automated test coverage
+- ✅ Broader automated test coverage baseline
 - ⏳ Observability stack expansion (structured logs + metrics + tracing)
 
 ---
@@ -172,7 +171,7 @@ Next UX opportunities:
 ## Tech Stack
 
 ### Backend
-- Java 22 (project target)
+- Java 17 (project target)
 - Spring Boot 3.3.0
 - Spring Web
 - Spring Data MongoDB
@@ -201,7 +200,7 @@ Next UX opportunities:
 ## Setup & Development
 
 ## Prerequisites
-- Java 22 (required by `pom.xml` release target)
+- Java 17 (required by `pom.xml` release target)
 - Node.js + npm
 - MongoDB Atlas (or compatible MongoDB instance)
 
@@ -272,6 +271,8 @@ Coat notes:
 Auth/profile + favorites:
 - `POST /api/v1/auth/register` → register user
 - `POST /api/v1/auth/login` → login user
+- `POST /api/v1/auth/refresh` → rotate access/refresh tokens
+- `POST /api/v1/auth/logout` → revoke active session
 - `PUT /api/v1/users/{userId}/profile` → update display name/password (auth required)
 - `GET /api/v1/users/{userId}/favorites` → list saved closets
 - `PUT /api/v1/users/{userId}/favorites/{closetId}` → save closet

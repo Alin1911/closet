@@ -105,7 +105,12 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
     }
 
     if (error) {
-      return <p className="text-center mt-5 text-danger">{error}</p>;
+      return (
+        <Container className="py-4 text-center">
+          <p className="mt-5 text-danger">{error}</p>
+          <Button variant="outline-info" onClick={() => getClosetData(closetId)}>Retry</Button>
+        </Container>
+      );
     }
 
   return (

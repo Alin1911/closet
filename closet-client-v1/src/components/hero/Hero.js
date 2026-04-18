@@ -22,7 +22,7 @@ import { Button } from 'react-bootstrap'
                                 <div className='closet-card' style={{"--img": `url(${coverImage})`}}>
                                     <div className='closet-detail'>
                                         <div className='closet-poster'>
-                                            <img src={closet.poster} alt="" />
+                                            <img src={closet.poster} alt={`${title} poster`} />
                                         </div>
                                         <div className='closet-title'>
                                             <h3>{title}</h3>

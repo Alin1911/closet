@@ -7,6 +7,7 @@ public record AuthResponse(
         String email,
         String displayName,
         List<String> favoriteClosetIds,
-        String token
+        String token,
+        String refreshToken
 ) {
 }
