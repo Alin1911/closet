@@ -1,8 +1,7 @@
 package dev.closet.closets;
 
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.Tags;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -227,18 +226,10 @@ public class ClosetService {
         if (meterRegistry == null) {
             return;
         }
-        Counter.builder("closet.browse.requests")
-                .description("Closet browse/list request volume")
-                .tag("mode", mode)
-                .tag("query", String.valueOf(hasQuery))
-                .register(meterRegistry)
+        Tags tags = Tags.of("mode", mode, "query", String.valueOf(hasQuery));
+        meterRegistry.counter("closet.browse.requests", tags)
                 .increment();
-        DistributionSummary.builder("closet.browse.result.count")
-                .description("Result sizes returned from closet browse endpoints")
-                .baseUnit("items")
-                .tag("mode", mode)
-                .tag("query", String.valueOf(hasQuery))
-                .register(meterRegistry)
+        meterRegistry.summary("closet.browse.result.count", tags)
                 .record(resultCount);
     }
 }

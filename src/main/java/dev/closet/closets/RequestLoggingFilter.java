@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Tags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -51,13 +50,15 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                     duration,
                     request.getRemoteAddr());
             if (meterRegistry != null) {
-                Timer.builder("closet.http.requests")
-                        .description("HTTP request duration for Closet API")
-                        .tag("method", request.getMethod())
-                        .tag("path", normalizePath(request.getRequestURI()))
-                        .tag("status", String.valueOf(response.getStatus()))
-                        .register(meterRegistry)
-                        .record(duration, TimeUnit.MILLISECONDS);
+                meterRegistry.timer(
+                                "closet.http.requests",
+                                Tags.of(
+                                        "method", request.getMethod(),
+                                        "path", normalizePath(request.getRequestURI()),
+                                        "status", String.valueOf(response.getStatus())
+                                )
+                        )
+                        .record(duration, java.util.concurrent.TimeUnit.MILLISECONDS);
             }
             MDC.remove(REQUEST_ID_MDC_KEY);
         }
@@ -68,6 +69,6 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             return "unknown";
         }
         String normalized = OBJECT_ID_PATTERN.matcher(path).replaceAll("/{id}");
-        return TRAILER_ID_PATTERN.matcher(normalized).replaceAll("/{videoId}");
+        return TRAILER_ID_PATTERN.matcher(normalized).replaceAll("/{trailerId}");
     }
 }

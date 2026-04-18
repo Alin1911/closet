@@ -1,7 +1,7 @@
 package dev.closet.closets;
 
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -198,11 +198,10 @@ public class AuthService {
         if (meterRegistry == null) {
             return;
         }
-        Counter.builder("closet.auth.events")
-                .description("Authentication and profile lifecycle events")
-                .tag("action", action)
-                .tag("outcome", outcome)
-                .register(meterRegistry)
+        meterRegistry.counter(
+                        "closet.auth.events",
+                        Tags.of("action", action, "outcome", outcome)
+                )
                 .increment();
     }
 }
