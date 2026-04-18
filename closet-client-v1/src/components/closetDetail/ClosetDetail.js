@@ -19,14 +19,22 @@ export default function ClosetDetail({ closets, loading, error, onTrackViewed, o
   }
 
   if (error) {
-    return <p className="text-center mt-5 text-danger">{error}</p>;
+    return (
+      <Container className="py-4 text-center">
+        <p className="mt-5 text-danger">{error}</p>
+        <Button as={Link} to="/browse" variant="outline-info">Go to browse</Button>
+      </Container>
+    );
   }
 
   if (!closet) {
     return (
       <Container className="py-4">
         <p>Closet not found.</p>
-        <Button variant="outline-info" onClick={() => navigate(-1)}>Go back</Button>
+        <div className="d-flex gap-2">
+          <Button variant="outline-info" onClick={() => navigate(-1)}>Go back</Button>
+          <Button as={Link} to="/browse" variant="outline-light">Browse closets</Button>
+        </div>
       </Container>
     );
   }

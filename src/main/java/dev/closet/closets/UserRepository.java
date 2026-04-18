@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends MongoRepository<UserProfile, ObjectId> {
     Optional<UserProfile> findByEmailIgnoreCase(String email);
-    Optional<UserProfile> findBySessionTokenHashAndSessionExpiresAtAfter(String sessionTokenHash, Instant now);
-    long deleteAllBySessionExpiresAtBefore(Instant now);
+    Optional<UserProfile> findByAccessTokenHashAndAccessTokenExpiresAtAfter(String accessTokenHash, Instant now);
+    Optional<UserProfile> findByRefreshTokenHashAndRefreshTokenExpiresAtAfter(String refreshTokenHash, Instant now);
 }

@@ -1,5 +1,7 @@
 package dev.closet.closets;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -14,10 +16,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/closets")
-@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = {"X-Total-Count", "X-Total-Pages", "X-Page", "X-Size"})
+@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = {"X-Total-Count", "X-Total-Pages", "X-Page", "X-Size", "X-Facet-Styles", "X-Facet-Seasons", "X-Facet-Colors"})
 public class ClosetController {
     @Autowired
     private ClosetService closetService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping
     public ResponseEntity<List<Closet>> getAllClosets(
@@ -42,6 +46,9 @@ public class ClosetController {
             headers.add("X-Total-Pages", String.valueOf(response.totalPages()));
             headers.add("X-Page", String.valueOf(response.page()));
             headers.add("X-Size", String.valueOf(response.size()));
+            headers.add("X-Facet-Styles", toJson(response.styleCounts()));
+            headers.add("X-Facet-Seasons", toJson(response.seasonCounts()));
+            headers.add("X-Facet-Colors", toJson(response.colorCounts()));
             return new ResponseEntity<>(response.items(), headers, HttpStatus.OK);
         }
         return new ResponseEntity<>(closetService.allClosets(style, season, color, sort), HttpStatus.OK);
@@ -91,5 +98,13 @@ public class ClosetController {
             return new ResponseEntity<>(new ApiResponse<>("Closet not found.", null), HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(new ApiResponse<>("Closet deleted.", null), HttpStatus.OK);
+    }
+
+    private String toJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException exception) {
+            return "{}";
+        }
     }
 }

@@ -29,8 +29,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/**"))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/closets/**").permitAll()
+                        .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

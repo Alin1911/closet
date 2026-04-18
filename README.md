@@ -53,7 +53,7 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 ## Architecture
 
 ### Backend
-- Framework: Spring Boot 3.3.0 (Java 22 target)
+- Framework: Spring Boot 3.3.0 (Java 21 target)
 - Modules:
   - Controllers: `ClosetController`, `CoatController`, `AuthController`
   - Services: `ClosetService`, `CoatService`, `AuthService`
@@ -172,7 +172,7 @@ Next UX opportunities:
 ## Tech Stack
 
 ### Backend
-- Java 22 (project target)
+- Java 21 (project target)
 - Spring Boot 3.3.0
 - Spring Web
 - Spring Data MongoDB
@@ -201,7 +201,7 @@ Next UX opportunities:
 ## Setup & Development
 
 ## Prerequisites
-- Java 22 (required by `pom.xml` release target)
+- Java 21 (required by `pom.xml` release target)
 - Node.js + npm
 - MongoDB Atlas (or compatible MongoDB instance)
 
@@ -272,6 +272,8 @@ Coat notes:
 Auth/profile + favorites:
 - `POST /api/v1/auth/register` → register user
 - `POST /api/v1/auth/login` → login user
+- `POST /api/v1/auth/refresh` → rotate access/refresh tokens
+- `POST /api/v1/auth/logout` → revoke active session
 - `PUT /api/v1/users/{userId}/profile` → update display name/password (auth required)
 - `GET /api/v1/users/{userId}/favorites` → list saved closets
 - `PUT /api/v1/users/{userId}/favorites/{closetId}` → save closet

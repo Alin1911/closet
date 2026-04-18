@@ -3,6 +3,7 @@ package dev.closet.closets;
 import jakarta.validation.Valid;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,6 +30,22 @@ public class AuthController {
         return authService.login(request)
                 .map(user -> new ResponseEntity<>(new ApiResponse<>("Login successful.", user), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(new ApiResponse<>("Invalid email or password.", null), HttpStatus.UNAUTHORIZED));
+    }
+
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody AuthRefreshRequest request) {
+        return authService.refresh(request)
+                .map(user -> new ResponseEntity<>(new ApiResponse<>("Session refreshed.", user), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(new ApiResponse<>("Refresh token is invalid or expired.", null), HttpStatus.UNAUTHORIZED));
+    }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(Authentication authentication, @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        if (authentication == null || !authentication.isAuthenticated() || authorization == null || !authorization.startsWith("Bearer ")) {
+            return new ResponseEntity<>(new ApiResponse<>("Not authenticated.", null), HttpStatus.UNAUTHORIZED);
+        }
+        authService.revokeSession(new ObjectId(authentication.getName()));
+        return new ResponseEntity<>(new ApiResponse<>("Logged out.", null), HttpStatus.OK);
     }
 
     @GetMapping("/users/{userId}/favorites")

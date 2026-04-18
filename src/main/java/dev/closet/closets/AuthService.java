@@ -25,11 +25,14 @@ public class AuthService {
     @Autowired
     private TokenService tokenService;
 
-    @Value("${auth.session.ttl-seconds:604800}")
-    private long sessionTtlSeconds;
+    @Value("${auth.access-token.ttl-seconds:900}")
+    private long accessTokenTtlSeconds;
+
+    @Value("${auth.refresh-token.ttl-seconds:604800}")
+    private long refreshTokenTtlSeconds;
 
     public Optional<AuthResponse> register(AuthRegisterRequest request) {
-        cleanupExpiredSessions();
+        cleanupExpiredTokens();
         String email = request.email().trim().toLowerCase();
         if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             return Optional.empty();
@@ -48,11 +51,29 @@ public class AuthService {
     }
 
     public Optional<AuthResponse> login(AuthLoginRequest request) {
-        cleanupExpiredSessions();
+        cleanupExpiredTokens();
         String email = request.email().trim().toLowerCase();
         return userRepository.findByEmailIgnoreCase(email)
                 .filter(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))
                 .map(this::issueSession);
+    }
+
+    public Optional<AuthResponse> refresh(AuthRefreshRequest request) {
+        cleanupExpiredTokens();
+        String hash = tokenService.hashToken(request.refreshToken().trim());
+        return userRepository.findByRefreshTokenHashAndRefreshTokenExpiresAtAfter(hash, Instant.now())
+                .map(this::issueSession);
+    }
+
+    public void revokeSession(ObjectId userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setAccessTokenHash(null);
+            user.setAccessTokenExpiresAt(null);
+            user.setRefreshTokenHash(null);
+            user.setRefreshTokenExpiresAt(null);
+            user.setUpdatedAt(Instant.now());
+            userRepository.save(user);
+        });
     }
 
     public Optional<List<Closet>> getFavorites(ObjectId userId) {
@@ -103,6 +124,10 @@ public class AuthService {
             }
             if (request.password() != null && !request.password().isBlank()) {
                 user.setPasswordHash(passwordEncoder.encode(request.password()));
+                user.setAccessTokenHash(null);
+                user.setAccessTokenExpiresAt(null);
+                user.setRefreshTokenHash(null);
+                user.setRefreshTokenExpiresAt(null);
             }
             user.setUpdatedAt(Instant.now());
             return toResponse(userRepository.save(user));
@@ -110,28 +135,32 @@ public class AuthService {
     }
 
     public Optional<UserProfile> resolveUserByToken(String rawToken) {
-        cleanupExpiredSessions();
+        cleanupExpiredTokens();
         if (rawToken == null || rawToken.isBlank()) {
             return Optional.empty();
         }
         String hash = tokenService.hashToken(rawToken.trim());
-        return userRepository.findBySessionTokenHashAndSessionExpiresAtAfter(hash, Instant.now());
+        return userRepository.findByAccessTokenHashAndAccessTokenExpiresAtAfter(hash, Instant.now());
     }
 
     private AuthResponse issueSession(UserProfile user) {
         String token = tokenService.generateRawToken();
-        user.setSessionTokenHash(tokenService.hashToken(token));
-        user.setSessionExpiresAt(Instant.now().plusSeconds(sessionTtlSeconds));
+        String refreshToken = tokenService.generateRawToken();
+        Instant now = Instant.now();
+        user.setAccessTokenHash(tokenService.hashToken(token));
+        user.setAccessTokenExpiresAt(now.plusSeconds(accessTokenTtlSeconds));
+        user.setRefreshTokenHash(tokenService.hashToken(refreshToken));
+        user.setRefreshTokenExpiresAt(now.plusSeconds(refreshTokenTtlSeconds));
         user.setUpdatedAt(Instant.now());
         UserProfile saved = userRepository.save(user);
-        return toResponse(saved, token);
+        return toResponse(saved, token, refreshToken);
     }
 
     private AuthResponse toResponse(UserProfile user) {
-        return toResponse(user, null);
+        return toResponse(user, null, null);
     }
 
-    private AuthResponse toResponse(UserProfile user, String token) {
+    private AuthResponse toResponse(UserProfile user, String token, String refreshToken) {
         List<String> favoriteIds = user.getFavoriteClosetIds() == null
                 ? List.of()
                 : user.getFavoriteClosetIds().stream().map(ObjectId::toHexString).toList();
@@ -140,11 +169,23 @@ public class AuthService {
                 user.getEmail(),
                 user.getDisplayName(),
                 favoriteIds,
-                token
+                token,
+                refreshToken
         );
     }
 
-    private void cleanupExpiredSessions() {
-        userRepository.deleteAllBySessionExpiresAtBefore(Instant.now());
+    private void cleanupExpiredTokens() {
+        Instant now = Instant.now();
+        userRepository.findAll().stream()
+                .filter(user -> (user.getAccessTokenExpiresAt() != null && user.getAccessTokenExpiresAt().isBefore(now))
+                        || (user.getRefreshTokenExpiresAt() != null && user.getRefreshTokenExpiresAt().isBefore(now)))
+                .forEach(user -> {
+                    user.setAccessTokenHash(null);
+                    user.setAccessTokenExpiresAt(null);
+                    user.setRefreshTokenHash(null);
+                    user.setRefreshTokenExpiresAt(null);
+                    user.setUpdatedAt(now);
+                    userRepository.save(user);
+                });
     }
 }
