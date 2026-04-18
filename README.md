@@ -36,14 +36,15 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - DTO validation + consistent API response envelope for write/auth flows
 - REST API with Spring Web + Spring Data MongoDB, CORS enabled for `http://localhost:3000`
 - OpenAPI docs (`/swagger-ui/index.html`) and Actuator health/metrics
+- Request correlation via `X-Request-Id` and structured request logging
 - GitHub Actions CI quality gates for backend and frontend
 
 ### Known current gaps in implementation
-- Automated test coverage is improved but still limited (especially backend controller/integration paths)
-- Observability remains basic (health/metrics present; tracing/alerting dashboards not yet implemented)
+- Automated test coverage is improved (including auth/session service + controller paths and frontend profile interactions) but integration/e2e depth remains limited
+- Observability baseline is improved (health/metrics + request correlation logging), but tracing/alerting dashboards are not yet implemented
 
 ### Proposed new features (high-impact, realistic)
-- **[Next] Broader automated test coverage** (controller/integration depth, auth/session edge cases)
+- **[Next] Broader automated test coverage** (integration/e2e depth, data-layer edge cases)
 - **[Next] Production observability depth** (dashboards, alerting, tracing)
 
 ---
@@ -137,6 +138,8 @@ Next UX opportunities:
 - ✅ Security maturity baseline (refresh-token rotation + logout revocation + stricter route policy)
 - ✅ Search relevance baseline (weighted ranking + typo tolerance + faceted counts)
 - ✅ Broader automated test coverage baseline (backend service + frontend interaction tests)
+- ✅ Expanded auth/session test coverage (service + controller) and frontend profile interaction tests
+- ✅ Request-correlation logging baseline (`X-Request-Id` + structured request logs)
 - ⏳ Centralized frontend query/state (React Query or equivalent)
 - ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
 
@@ -164,7 +167,7 @@ Next UX opportunities:
 - ✅ Search/filter platform with scalable pagination foundation
 - ✅ CI/CD quality gates baseline
 - ✅ Broader automated test coverage baseline
-- ⏳ Observability stack expansion (structured logs + metrics + tracing)
+- ⏳ Observability stack expansion (dashboards, alerting, tracing; structured request logging baseline is in place)
 
 ---
 
