@@ -1,5 +1,7 @@
 package dev.closet.closets;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +27,9 @@ public class AuthService {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired(required = false)
+    private MeterRegistry meterRegistry;
+
     @Value("${auth.access-token.ttl-seconds:900}")
     private long accessTokenTtlSeconds;
 
@@ -34,6 +39,7 @@ public class AuthService {
     public Optional<AuthResponse> register(AuthRegisterRequest request) {
         String email = request.email().trim().toLowerCase();
         if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
+            recordAuthEvent("register", "rejected_duplicate_email");
             return Optional.empty();
         }
 
@@ -46,20 +52,31 @@ public class AuthService {
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
         UserProfile saved = userRepository.insert(user);
+        recordAuthEvent("register", "success");
         return Optional.of(issueSession(saved));
     }
 
     public Optional<AuthResponse> login(AuthLoginRequest request) {
         String email = request.email().trim().toLowerCase();
-        return userRepository.findByEmailIgnoreCase(email)
-                .filter(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))
-                .map(this::issueSession);
+        Optional<UserProfile> user = userRepository.findByEmailIgnoreCase(email);
+        if (user.isEmpty()) {
+            recordAuthEvent("login", "unknown_email");
+            return Optional.empty();
+        }
+        if (!passwordEncoder.matches(request.password(), user.get().getPasswordHash())) {
+            recordAuthEvent("login", "invalid_password");
+            return Optional.empty();
+        }
+        recordAuthEvent("login", "success");
+        return Optional.of(issueSession(user.get()));
     }
 
     public Optional<AuthResponse> refresh(AuthRefreshRequest request) {
         String hash = tokenService.hashToken(request.refreshToken().trim());
-        return userRepository.findByRefreshTokenHashAndRefreshTokenExpiresAtAfter(hash, Instant.now())
+        Optional<AuthResponse> response = userRepository.findByRefreshTokenHashAndRefreshTokenExpiresAtAfter(hash, Instant.now())
                 .map(this::issueSession);
+        recordAuthEvent("refresh", response.isPresent() ? "success" : "rejected");
+        return response;
     }
 
     public void revokeSession(ObjectId userId) {
@@ -70,6 +87,7 @@ public class AuthService {
             user.setRefreshTokenExpiresAt(null);
             user.setUpdatedAt(Instant.now());
             userRepository.save(user);
+            recordAuthEvent("logout", "success");
         });
     }
 
@@ -87,6 +105,7 @@ public class AuthService {
     public Optional<AuthResponse> addFavorite(ObjectId userId, ObjectId closetId) {
         Optional<UserProfile> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
+            recordAuthEvent("favorites_add", "user_not_found");
             return Optional.empty();
         }
 
@@ -97,12 +116,14 @@ public class AuthService {
         }
         user.setFavoriteClosetIds(favorites);
         user.setUpdatedAt(Instant.now());
+        recordAuthEvent("favorites_add", "success");
         return Optional.of(toResponse(userRepository.save(user)));
     }
 
     public Optional<AuthResponse> removeFavorite(ObjectId userId, ObjectId closetId) {
         Optional<UserProfile> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
+            recordAuthEvent("favorites_remove", "user_not_found");
             return Optional.empty();
         }
 
@@ -111,11 +132,12 @@ public class AuthService {
         favorites.removeIf(id -> id.equals(closetId));
         user.setFavoriteClosetIds(favorites);
         user.setUpdatedAt(Instant.now());
+        recordAuthEvent("favorites_remove", "success");
         return Optional.of(toResponse(userRepository.save(user)));
     }
 
     public Optional<AuthResponse> updateProfile(ObjectId userId, ProfileUpdateRequest request) {
-        return userRepository.findById(userId).map(user -> {
+        Optional<AuthResponse> response = userRepository.findById(userId).map(user -> {
             if (request.displayName() != null && !request.displayName().isBlank()) {
                 user.setDisplayName(request.displayName().trim());
             }
@@ -129,6 +151,8 @@ public class AuthService {
             user.setUpdatedAt(Instant.now());
             return toResponse(userRepository.save(user));
         });
+        recordAuthEvent("profile_update", response.isPresent() ? "success" : "user_not_found");
+        return response;
     }
 
     public Optional<UserProfile> resolveUserByToken(String rawToken) {
@@ -168,5 +192,16 @@ public class AuthService {
                 token,
                 refreshToken
         );
+    }
+
+    private void recordAuthEvent(String action, String outcome) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.counter(
+                        "closet.auth.events",
+                        Tags.of("action", action, "outcome", outcome)
+                )
+                .increment();
     }
 }
