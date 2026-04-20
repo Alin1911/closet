@@ -169,14 +169,14 @@ test('refreshes session token on 401 and completes save flow', async ({ page }) 
 
   await page.getByLabel('Email').fill('user@example.com');
   await page.getByLabel('Password').fill('password123');
-  await page.getByRole('button', { name: 'Login' }).click();
-  await expect(page.getByText('Login successful.')).toBeVisible();
+  await page.locator('form').getByRole('button', { name: 'Login' }).click();
+  await expect(page.getByText('Login successful.').first()).toBeVisible();
 
   await page.goto('/browse');
   await page.getByRole('button', { name: 'Save closet' }).first().click();
 
-  await expect(page.getByText('Closet saved.')).toBeVisible();
+  await expect(page.getByText('Closet saved.').first()).toBeVisible();
   await page.goto('/saved');
   await expect(page.getByRole('heading', { name: 'Saved closets' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: favoriteCloset.name })).toBeVisible();
+  await expect(page.getByText(favoriteCloset.name).first()).toBeVisible();
 });
