@@ -1,0 +1,38 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: closet-default
+  group_by: [alertname, service, team]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  routes:
+    - receiver: closet-pager
+      matchers:
+        - service="closet-api"
+        - severity="critical"
+        - incident_route="pager"
+      continue: false
+    - receiver: closet-ticket
+      matchers:
+        - service="closet-api"
+        - alert_type="slo_burn_rate"
+        - incident_route="ticket"
+      continue: false
+
+receivers:
+  - name: closet-default
+    webhook_configs:
+      - url: https://example.invalid/closet/default
+        send_resolved: true
+
+  - name: closet-pager
+    webhook_configs:
+      - url: https://example.invalid/closet/pager
+        send_resolved: true
+
+  - name: closet-ticket
+    webhook_configs:
+      - url: https://example.invalid/closet/ticket
+        send_resolved: true

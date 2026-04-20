@@ -44,12 +44,12 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Production observability assets: Prometheus alert rules + Grafana dashboard template
 
 ### Known current gaps in implementation
-- Automated test coverage now includes backend web MVC controller coverage and frontend coat interaction flows, but full end-to-end browser coverage remains limited
-- Observability now includes dashboards/alerting templates and tracing-enriched logs, but fully managed production rollout (hosted Grafana/Prometheus + incident routing) is environment-dependent
+- Automated test coverage now includes backend web MVC controller coverage, frontend interaction tests, and browser-level e2e user journeys; broader cross-browser/device matrices remain environment-dependent
+- Observability now includes dashboards, SLO burn-rate alerting, and incident-routing templates, but fully managed production rollout (hosted Grafana/Prometheus/Alertmanager + incident integrations) is environment-dependent
 
 ### Proposed new features (high-impact, realistic)
-- **[Next] Full browser e2e coverage** (multi-page user journeys + auth/session refresh)
-- **[Next] Advanced observability operations** (SLO burn-rate alerts + incident auto-routing)
+- ✅ Full browser e2e coverage (multi-page user journeys + auth/session refresh)
+- ✅ Advanced observability operations (SLO burn-rate alerts + incident auto-routing template)
 
 ---
 
@@ -148,6 +148,8 @@ Next UX opportunities:
 - ✅ Added coat-service edge-case tests and saved/favorites frontend interaction tests
 - ✅ Expanded integration-depth test coverage (backend web MVC + frontend coat interaction paths)
 - ✅ Centralized frontend query/state (React Query equivalent via shared query/state hook and cache)
+- ✅ Browser e2e regression coverage for core multi-page journeys and auth refresh flow
+- ✅ SLO burn-rate alerting and Alertmanager incident-routing template for production operations
 - ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
 
 ---
@@ -204,10 +206,12 @@ Next UX opportunities:
 ### Tooling
 - Maven
 - npm
+- Playwright (browser e2e)
 - Postman collection (`closets.postman_collection.json`)
 - Observability assets:
   - `observability/prometheus/closet-alerts.yml`
   - `observability/grafana/closet-overview-dashboard.json`
+  - `observability/alertmanager/closet-alertmanager-routing.example.yml`
 
 ---
 
@@ -260,6 +264,13 @@ Run frontend tests:
 CI=true npm test -- --watchAll=false --passWithNoTests
 ```
 
+Run browser e2e tests:
+```bash
+cd closet-client-v1
+npx playwright install --with-deps chromium
+CI=true npm run test:e2e
+```
+
 ### Default local URLs
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8080`
@@ -304,6 +315,8 @@ closet/
 ├── src/main/resources/                  # Backend config
 ├── src/test/java/dev/closet/closets/   # Backend tests
 ├── closet-client-v1/                    # React frontend
+│   └── e2e/                             # Playwright browser e2e tests
+├── observability/                       # Prometheus/Grafana/Alertmanager assets
 ├── closets.postman_collection.json
 └── README.md
 ```
