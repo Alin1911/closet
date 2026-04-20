@@ -39,14 +39,17 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Request correlation via `X-Request-Id`, structured request logging, and request-level metrics
 - Auth and browse domain metrics for core product/auth flows
 - GitHub Actions CI quality gates for backend and frontend
+- Centralized frontend query/state orchestration for browse/auth/closet data flows
+- Legacy route normalization with backward-compatible redirects (`/Trailer/*`, `/Coats/*`)
+- Production observability assets: Prometheus alert rules + Grafana dashboard template
 
 ### Known current gaps in implementation
-- Automated test coverage is improved (including auth/session service + controller paths, coat-service edge cases, and frontend profile/saved interactions) but integration/e2e depth remains limited
-- Observability baseline is improved (health/metrics/prometheus + request correlation + request/domain metrics), but dashboards/alerting are not yet implemented
+- Automated test coverage now includes backend web MVC controller coverage and frontend coat interaction flows, but full end-to-end browser coverage remains limited
+- Observability now includes dashboards/alerting templates and tracing-enriched logs, but fully managed production rollout (hosted Grafana/Prometheus + incident routing) is environment-dependent
 
 ### Proposed new features (high-impact, realistic)
-- **[Next] Broader automated test coverage** (integration/e2e depth)
-- **[Next] Production observability depth** (dashboards, alerting, tracing)
+- **[Next] Full browser e2e coverage** (multi-page user journeys + auth/session refresh)
+- **[Next] Advanced observability operations** (SLO burn-rate alerts + incident auto-routing)
 
 ---
 
@@ -143,7 +146,8 @@ Next UX opportunities:
 - ✅ Request-correlation logging baseline (`X-Request-Id` + structured request logs)
 - ✅ Production observability baseline expansion (Prometheus endpoint + request/domain metrics)
 - ✅ Added coat-service edge-case tests and saved/favorites frontend interaction tests
-- ⏳ Centralized frontend query/state (React Query or equivalent)
+- ✅ Expanded integration-depth test coverage (backend web MVC + frontend coat interaction paths)
+- ✅ Centralized frontend query/state (React Query equivalent via shared query/state hook and cache)
 - ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
 
 ---
@@ -166,11 +170,11 @@ Next UX opportunities:
 
 ### Major upgrades (long-term vision)
 - ✅ Add authentication/profile basics and saved experiences
-- ⏳ Domain naming cleanup/migration away from legacy movie-template artifacts
+- ✅ Domain naming cleanup/migration away from legacy movie-template artifacts
 - ✅ Search/filter platform with scalable pagination foundation
 - ✅ CI/CD quality gates baseline
 - ✅ Broader automated test coverage baseline
-- ⏳ Observability stack expansion (dashboards/alerting and deeper tracing rollout; Prometheus + request/domain metrics baseline is in place)
+- ✅ Observability stack expansion baseline (dashboards/alerting assets + tracing-enriched logging; Prometheus + request/domain metrics baseline is in place)
 
 ---
 
@@ -201,6 +205,9 @@ Next UX opportunities:
 - Maven
 - npm
 - Postman collection (`closets.postman_collection.json`)
+- Observability assets:
+  - `observability/prometheus/closet-alerts.yml`
+  - `observability/grafana/closet-overview-dashboard.json`
 
 ---
 

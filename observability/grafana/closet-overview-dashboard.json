@@ -1,0 +1,80 @@
+{
+  "title": "Closet API Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": [
+    "closet",
+    "api",
+    "observability"
+  ],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request rate (RPS)",
+      "targets": [
+        {
+          "expr": "sum(rate(closet_http_requests_seconds_count[5m]))",
+          "legendFormat": "total"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Error rate (%)",
+      "targets": [
+        {
+          "expr": "100 * sum(rate(closet_http_requests_seconds_count{status=~\"5..\"}[5m])) / clamp_min(sum(rate(closet_http_requests_seconds_count[5m])), 1)",
+          "legendFormat": "5xx %"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency (p95)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(closet_http_requests_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Auth events by outcome",
+      "targets": [
+        {
+          "expr": "sum(rate(closet_auth_events_total[5m])) by (outcome)",
+          "legendFormat": "{{outcome}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Browse requests by mode/query",
+      "targets": [
+        {
+          "expr": "sum(rate(closet_browse_requests_total[5m])) by (mode, query)",
+          "legendFormat": "{{mode}} query={{query}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Browse result size (avg)",
+      "targets": [
+        {
+          "expr": "sum(rate(closet_browse_result_count_sum[5m])) / clamp_min(sum(rate(closet_browse_result_count_count[5m])), 1)",
+          "legendFormat": "avg results"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+    }
+  ]
+}
