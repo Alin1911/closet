@@ -31,7 +31,7 @@ async function mockApi(page) {
   let activeToken = 'stale-access-token';
   let refreshCalls = 0;
   let favoriteSet = new Set();
-  let coatNotes = [{ id: '75d4f1a2b3c4d5e6f7080901', name: 'Closet note', description: 'Try oversized blazer.', images: [] }];
+  let itemNotes = [{ id: '75d4f1a2b3c4d5e6f7080901', name: 'Closet note', description: 'Try oversized blazer.', images: [] }];
 
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
@@ -61,7 +61,7 @@ async function mockApi(page) {
     }
 
     if (pathname === `/api/v1/closets/${favoriteCloset.id}/coats` && method === 'GET') {
-      return json(coatNotes);
+      return json(itemNotes);
     }
 
     if (pathname === `/api/v1/closets/${favoriteCloset.id}/coats` && method === 'POST') {
@@ -72,7 +72,7 @@ async function mockApi(page) {
         description: payload.description,
         images: payload.images || []
       };
-      coatNotes = [...coatNotes, created];
+      itemNotes = [...itemNotes, created];
       return json({ message: 'Item note created.', data: created }, 201);
     }
 

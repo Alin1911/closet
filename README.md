@@ -266,7 +266,7 @@ CI=true npm test -- --watchAll=false --passWithNoTests
 
 Run browser e2e tests:
 ```bash
-cd /home/runner/work/closet/closet/closet-client-v1
+cd closet-client-v1
 npx playwright install --with-deps chromium
 CI=true npm run test:e2e
 ```
