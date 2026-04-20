@@ -49,3 +49,61 @@ groups:
         annotations:
           summary: "Auth failures are spiking"
           description: "Auth failures exceeded 0.5 events/sec in the last 5 minutes."
+
+      - alert: ClosetApiAvailabilitySloBurnRateFast
+        expr: |
+          (
+            (
+              sum(rate(closet_http_requests_seconds_count{status=~"5.."}[5m]))
+              /
+              clamp_min(sum(rate(closet_http_requests_seconds_count[5m])), 1)
+            ) / 0.005
+          ) > 14.4
+          and
+          (
+            (
+              sum(rate(closet_http_requests_seconds_count{status=~"5.."}[1h]))
+              /
+              clamp_min(sum(rate(closet_http_requests_seconds_count[1h])), 1)
+            ) / 0.005
+          ) > 14.4
+        for: 2m
+        labels:
+          severity: critical
+          service: closet-api
+          team: closet-platform
+          alert_type: slo_burn_rate
+          incident_route: pager
+        annotations:
+          summary: "Closet API SLO burn rate is critical"
+          description: "Availability error-budget burn rate is above 14.4x on both 5m and 1h windows."
+          runbook_url: "https://example.com/runbooks/closet-api-slo-burn-rate"
+
+      - alert: ClosetApiAvailabilitySloBurnRateSlow
+        expr: |
+          (
+            (
+              sum(rate(closet_http_requests_seconds_count{status=~"5.."}[30m]))
+              /
+              clamp_min(sum(rate(closet_http_requests_seconds_count[30m])), 1)
+            ) / 0.005
+          ) > 6
+          and
+          (
+            (
+              sum(rate(closet_http_requests_seconds_count{status=~"5.."}[6h]))
+              /
+              clamp_min(sum(rate(closet_http_requests_seconds_count[6h])), 1)
+            ) / 0.005
+          ) > 6
+        for: 15m
+        labels:
+          severity: warning
+          service: closet-api
+          team: closet-platform
+          alert_type: slo_burn_rate
+          incident_route: ticket
+        annotations:
+          summary: "Closet API SLO burn rate is elevated"
+          description: "Availability error-budget burn rate is above 6x on both 30m and 6h windows."
+          runbook_url: "https://example.com/runbooks/closet-api-slo-burn-rate"

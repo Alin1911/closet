@@ -40,3 +40,23 @@ jobs:
         run: npm run build
       - name: Test
         run: CI=true npm test -- --watchAll=false --passWithNoTests
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: closet-client-v1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: closet-client-v1/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Run browser e2e tests
+        run: CI=true npm run test:e2e
