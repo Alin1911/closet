@@ -1,30 +1,10 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Button, Card, Col, Container, Form, Pagination, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import api from '../../api/axiosConfig';
 import ClosetGridSkeleton from '../common/ClosetGridSkeleton';
-import { trackEvent } from '../../utils/analytics';
 
-const DEFAULT_FILTERS = {
-  style: '',
-  season: '',
-  color: '',
-  sort: 'newest',
-  q: '',
-  page: 0,
-  size: 12
-};
-
-export default function Browse({ loading, error, onTrackViewed, onToggleFavorite, authUser, onNotify }) {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+export default function Browse({ filters, items, totalPages, totalCount, facetCounts, loading, error, onFilterChange, onResetFilters, onRetry, onTrackViewed, onToggleFavorite, authUser, onNotify }) {
   const [favoriteError, setFavoriteError] = useState('');
-  const [browseLoading, setBrowseLoading] = useState(false);
-  const [browseError, setBrowseError] = useState('');
-  const [items, setItems] = useState([]);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  const [facetCounts, setFacetCounts] = useState({ styles: {}, seasons: {}, colors: {} });
-  const [refreshKey, setRefreshKey] = useState(0);
   const [pageInput, setPageInput] = useState('1');
   const headingRef = useRef(null);
 
@@ -51,47 +31,6 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
     setPageInput(String((filters.page || 0) + 1));
   }, [filters.page]);
 
-  useEffect(() => {
-    const parseHeaderObject = (headerValue) => {
-      if (!headerValue) {
-        return {};
-      }
-      try {
-        return JSON.parse(headerValue);
-      } catch (_) {
-        return {};
-      }
-    };
-
-    const fetchBrowseClosets = async () => {
-      setBrowseLoading(true);
-      setBrowseError('');
-      try {
-        const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== '' && value !== null && value !== undefined) {
-            params.append(key, value);
-          }
-        });
-        const response = await api.get(`/api/v1/closets?${params.toString()}`);
-        setItems(response.data || []);
-        setTotalPages(Number(response.headers['x-total-pages'] || 0));
-        setTotalCount(Number(response.headers['x-total-count'] || (response.data || []).length));
-        setFacetCounts({
-          styles: parseHeaderObject(response.headers['x-facet-styles']),
-          seasons: parseHeaderObject(response.headers['x-facet-seasons']),
-          colors: parseHeaderObject(response.headers['x-facet-colors'])
-        });
-      } catch (err) {
-        console.error(err);
-        setBrowseError('Could not load closets for browse.');
-      } finally {
-        setBrowseLoading(false);
-      }
-    };
-    fetchBrowseClosets();
-  }, [filters, refreshKey]);
-
   const trailerIdFromLink = (link) => (link ? link.substring(link.length - 11) : null);
 
   const handleFavorite = async (closetId) => {
@@ -104,35 +43,16 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
     }
   };
 
-  const onFilterChange = (name, value) => {
-    if (name === 'page') {
-      const pageNumber = Number(value);
-      if (Number.isNaN(pageNumber) || pageNumber < 0) {
-        return;
-      }
-    }
-    const next = { ...filters, [name]: value, page: name === 'page' ? value : 0 };
-    setFilters(next);
-    if (name === 'q') {
-      trackEvent('closet_search', { queryLength: (value || '').trim().length });
-    }
-  };
-
-  const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
-    trackEvent('browse_filters_reset');
-  };
-
-  if (loading || browseLoading) {
+  if (loading) {
     return <Container className="py-4"><ClosetGridSkeleton /></Container>;
   }
 
-  if (error || browseError) {
+  if (error) {
     return (
       <Container className="py-4">
-        <p className="text-center mt-5 text-danger">{error || browseError}</p>
+        <p className="text-center mt-5 text-danger">{error}</p>
         <div className="text-center">
-          <Button variant="outline-info" onClick={() => setRefreshKey((value) => value + 1)}>Retry</Button>
+          <Button variant="outline-info" onClick={onRetry}>Retry</Button>
         </div>
       </Container>
     );
@@ -186,14 +106,14 @@ export default function Browse({ loading, error, onTrackViewed, onToggleFavorite
           </Form.Select>
         </Col>
         <Col md={1}>
-          <Button variant="outline-light" className="w-100" onClick={resetFilters}>Reset</Button>
+          <Button variant="outline-light" className="w-100" onClick={onResetFilters}>Reset</Button>
         </Col>
       </Row>
 
       {!items.length ? (
         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
           <p className="mb-0">No closets found for the selected filters.</p>
-          <Button variant="outline-light" onClick={resetFilters}>Clear filters</Button>
+          <Button variant="outline-light" onClick={onResetFilters}>Clear filters</Button>
         </div>
       ) : null}
       {items.length ? <p className="text-secondary">Showing {items.length} of {totalCount} closets</p> : null}
