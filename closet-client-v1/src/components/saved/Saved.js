@@ -23,7 +23,12 @@ export default function Saved({ closets, authUser, loading, onTrackViewed, onTog
   return (
     <Container className="py-4">
       <h2>Saved closets</h2>
-      {!closets.length ? <p>You have not saved any closets yet.</p> : null}
+      {!closets.length ? (
+        <div>
+          <p aria-live="polite">You have not saved any closets yet.</p>
+          <Link className="btn btn-outline-info" to="/browse">Browse closets</Link>
+        </div>
+      ) : null}
       <Row className="g-3">
         {closets.map((item) => {
           const trailerId = trailerIdFromLink(item.trailerLink);

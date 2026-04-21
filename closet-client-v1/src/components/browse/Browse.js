@@ -71,7 +71,7 @@ export default function Browse({ filters, items, totalPages, totalCount, facetCo
     <Container className="py-4">
       <h2 tabIndex={-1} ref={headingRef}>Browse closets</h2>
       <p className="text-secondary">Search, filter by style/season/color, and sort by newest or name.</p>
-      {favoriteError ? <p className="text-danger">{favoriteError}</p> : null}
+      {favoriteError ? <p className="text-danger" aria-live="assertive">{favoriteError}</p> : null}
       <Row className="mb-3 g-2">
         <Col md={3}>
           <Form.Control
@@ -112,7 +112,7 @@ export default function Browse({ filters, items, totalPages, totalCount, facetCo
 
       {!items.length ? (
         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <p className="mb-0">No closets found for the selected filters.</p>
+          <p className="mb-0" aria-live="polite">No closets found for the selected filters.</p>
           <Button variant="outline-light" onClick={onResetFilters}>Clear filters</Button>
         </div>
       ) : null}

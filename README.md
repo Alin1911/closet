@@ -125,8 +125,9 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 Most high-impact quick wins are implemented (IA, CTA clarity, basic loading/error/empty handling, mobile touch targets).
 
 Next UX opportunities:
-- Expand accessibility coverage (keyboard flows, ARIA landmarks, contrast audits)
-- Continue polish of empty/error states and guided recovery flows
+- ✅ Expanded accessibility baseline for keyboard users (skip-to-content, visible focus styles, live-region messaging, focusable main landmark)
+- ✅ Improved guided recovery UX in key empty/error states (clear retry/browse actions in Saved and Coats flows)
+- Continue accessibility QA depth (contrast audits and broader screen-reader walkthroughs)
 
 ---
 

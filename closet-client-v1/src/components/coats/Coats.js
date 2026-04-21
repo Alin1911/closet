@@ -107,8 +107,11 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
     if (error) {
       return (
         <Container className="py-4 text-center">
-          <p className="mt-5 text-danger">{error}</p>
-          <Button variant="outline-info" onClick={() => getClosetData(closetId)}>Retry</Button>
+          <p className="mt-5 text-danger" aria-live="assertive">{error}</p>
+          <div className="d-flex align-items-center justify-content-center flex-wrap gap-2">
+            <Button variant="outline-info" onClick={() => getClosetData(closetId)}>Retry</Button>
+            <Button as={Link} to="/browse" variant="outline-light">Browse closets</Button>
+          </div>
         </Container>
       );
     }
@@ -130,8 +133,8 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
             <Row>
               <Col>
                 <CoatForm handleSubmit={addCoat} coatText={coatText} labelText="Add item note" defaultValue="" isSubmitting={isSubmitting} />
-                {submitError ? <p className="text-danger mt-2">{submitError}</p> : null}
-                {editError ? <p className="text-danger mt-2">{editError}</p> : null}
+                {submitError ? <p className="text-danger mt-2" aria-live="assertive">{submitError}</p> : null}
+                {editError ? <p className="text-danger mt-2" aria-live="assertive">{editError}</p> : null}
               </Col>
             </Row>
             <Row>
@@ -171,7 +174,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
                   </Row>
                 </React.Fragment>
               )
-            }) : <p className="mt-3">No item notes yet.</p>
+            }) : <p className="mt-3">No item notes yet. Add your first note above.</p>
           }
         </Col>
       </Row>

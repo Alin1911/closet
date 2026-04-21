@@ -20,6 +20,7 @@ describe('Saved', () => {
   it('shows empty state for authenticated user without saved closets', () => {
     renderSaved();
     expect(screen.getByText('You have not saved any closets yet.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Browse closets' }).getAttribute('href')).toBe('/browse');
   });
 
   it('removes a closet from saved list and sends notification', async () => {

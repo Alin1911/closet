@@ -67,6 +67,7 @@ function App() {
 
   return (
     <div className="App">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Header authUser={authUser} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<Layout/>}>

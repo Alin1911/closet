@@ -17,20 +17,20 @@ export default function Home({closets, loading, error, recentlyViewedClosets, on
 
   if (error) {
     return (
-      <Container className="py-4 text-center">
-        <p className="mt-5 text-danger">{error}</p>
-        <Button variant="outline-info" onClick={onRetry}>Retry</Button>
-      </Container>
-    );
+        <Container className="py-4 text-center">
+          <p className="mt-5 text-danger" aria-live="assertive">{error}</p>
+          <Button variant="outline-info" onClick={onRetry}>Retry</Button>
+        </Container>
+      );
   }
 
   if (!closets.length) {
     return (
-      <Container className="py-4 text-center">
-        <p className="mt-5">No closets found yet.</p>
-        <Button variant="outline-info" onClick={onRetry}>Refresh</Button>
-      </Container>
-    );
+        <Container className="py-4 text-center">
+          <p className="mt-5" aria-live="polite">No closets found yet.</p>
+          <Button variant="outline-info" onClick={onRetry}>Refresh</Button>
+        </Container>
+      );
   }
 
   return (
