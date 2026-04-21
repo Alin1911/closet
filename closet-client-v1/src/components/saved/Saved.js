@@ -24,9 +24,9 @@ export default function Saved({ closets, authUser, loading, onTrackViewed, onTog
     <Container className="py-4">
       <h2>Saved closets</h2>
       {!closets.length ? (
-        <div aria-live="polite">
-          <p>You have not saved any closets yet.</p>
-          <Button as={Link} to="/browse" variant="outline-info">Browse closets</Button>
+        <div>
+          <p aria-live="polite">You have not saved any closets yet.</p>
+          <Link className="btn btn-outline-info" to="/browse">Browse closets</Link>
         </div>
       ) : null}
       <Row className="g-3">

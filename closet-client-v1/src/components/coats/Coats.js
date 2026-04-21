@@ -174,7 +174,7 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
                   </Row>
                 </React.Fragment>
               )
-            }) : <p className="mt-3" aria-live="polite">No item notes yet. Add your first note above.</p>
+            }) : <p className="mt-3">No item notes yet. Add your first note above.</p>
           }
         </Col>
       </Row>

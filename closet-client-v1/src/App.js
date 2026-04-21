@@ -87,7 +87,6 @@ function App() {
           <Toast.Body className="text-light">{toast.message}</Toast.Body>
         </Toast>
       </ToastContainer>
-      <footer className="visually-hidden" aria-label="Application footer">Closet</footer>
     </div>
   );
 }

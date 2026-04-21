@@ -55,6 +55,6 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
-.skip-link:focus {
+.skip-link:focus-visible {
   left: 8px;
 }
