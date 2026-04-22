@@ -323,7 +323,7 @@ closet/
 └── README.md
 ```
 
-## Future Features & Roadmap (User Stories)
+## Future Features and Roadmap (User Stories)
 
 > **1) Outfit Planner Calendar**
 > As a logged-in user, I want to plan outfits on a calendar so that I can organize what I will wear ahead of time.
@@ -345,7 +345,7 @@ closet/
 > As a user, I want to upload closet and coat images with suggested tags so that organizing my wardrobe is faster.
 >
 > **Acceptance Criteria**
-> - Users can upload images during closet/coat create and update flows.
+> - Users can upload images during closet/clothing-item create and update flows.
 > - The system suggests tags (e.g., color, season, style) that users can accept or edit.
 > - Uploaded assets are validated for type/size and stored with associated closet/coat records.
 
@@ -386,7 +386,7 @@ closet/
 >
 > **Acceptance Criteria**
 > - Users can log outfits by date from planned or completed looks.
-> - The app tracks wear counts per closet item and shows last-worn metadata.
+> - The app tracks wear counts per clothing item and shows last-worn metadata.
 > - The insights view highlights most-worn and least-worn pieces over configurable date ranges.
 
 > **9) Smart Wardrobe Gap Detection**
