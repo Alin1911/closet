@@ -322,3 +322,125 @@ closet/
 ├── closets.postman_collection.json
 └── README.md
 ```
+
+## Future Features and Roadmap (User Stories)
+
+> **1) Outfit Planner Calendar**
+> As a logged-in user, I want to plan outfits on a calendar so that I can organize what I will wear ahead of time.
+>
+> **Acceptance Criteria**
+> - Users can create, edit, and remove outfit plans for specific dates.
+> - An outfit plan can reference one or more closets and clothing items already saved in the app.
+> - Planned outfits are shown in both calendar view and a simple upcoming list view.
+
+> **2) Personalized Closet Recommendations**
+> As a user, I want personalized closet recommendations so that I can discover styles that better match my preferences.
+>
+> **Acceptance Criteria**
+> - Recommendations are based on user interactions (recently viewed, saved, and filter usage).
+> - The home screen displays a dedicated “Recommended for you” section.
+> - Recommendations degrade gracefully to popular closets for new users with limited activity.
+
+> **3) Image Upload with Auto-Tagging**
+> As a user, I want to upload closet and coat images with suggested tags so that organizing my wardrobe is faster.
+>
+> **Acceptance Criteria**
+> - Users can upload images during closet/clothing-item create and update flows.
+> - The system suggests tags (e.g., color, season, style) that users can accept or edit.
+> - Uploaded assets are validated for type/size and stored with associated closet/coat records.
+
+> **4) Advanced Search Alerts**
+> As a user, I want to save searches and receive alerts for new matching closets so that I do not miss relevant additions.
+>
+> **Acceptance Criteria**
+> - Users can save a search query with active filters (style, season, color, text query).
+> - The system checks new/updated closets against saved searches.
+> - Users can manage alert preferences (in-app and/or email) from profile settings.
+
+> **5) Closet Sharing & Collaboration**
+> As a user, I want to share selected closets with friends or collaborators so that we can plan looks together.
+>
+> **Acceptance Criteria**
+> - Users can generate share links for specific closets with configurable visibility.
+> - Users can invite collaborators with view-only or edit permissions.
+> - Audit metadata tracks who updated closet details and when.
+
+> **6) Weather-Aware Outfit Suggestions**
+> As a user, I want outfit suggestions based on my local weather so that I can choose practical looks faster.
+>
+> **Acceptance Criteria**
+> - Users can enable location-based weather integration in settings.
+> - Outfit suggestions adapt to current and forecasted weather conditions.
+> - Users can override weather-based recommendations manually.
+
+> **7) Capsule Wardrobe Generator**
+> As a user, I want the app to generate a capsule wardrobe from my saved items so that I can simplify daily outfit choices.
+>
+> **Acceptance Criteria**
+> - Users can generate a capsule set by selecting season, style, and item count.
+> - The generator balances categories (tops, bottoms, outerwear, shoes, accessories).
+> - Users can save, edit, and regenerate capsule sets.
+
+> **8) Outfit History & Rewear Insights**
+> As a user, I want to track what I wore and how often so that I can improve wardrobe usage and avoid unused items.
+>
+> **Acceptance Criteria**
+> - Users can log outfits by date from planned or completed looks.
+> - The app tracks wear counts per clothing item and shows last-worn metadata.
+> - The insights view highlights most-worn and least-worn pieces over configurable date ranges.
+
+> **9) Smart Wardrobe Gap Detection**
+> As a user, I want the app to identify missing basics in my closet so that I can shop more intentionally.
+>
+> **Acceptance Criteria**
+> - The app evaluates closet composition against selected style profiles and season needs.
+> - Gap suggestions are ranked by expected utility and rewear potential.
+> - Users can dismiss suggestions or convert them into wishlist items.
+
+> **10) Size/Fit Profile + Brand Fit Notes**
+> As a user, I want to save fit notes by brand/item so that future purchases are more accurate.
+>
+> **Acceptance Criteria**
+> - Users can store body measurements and fit preferences in profile settings.
+> - Users can attach brand-specific and item-specific fit notes to closet and wishlist entries.
+> - Fit notes are surfaced during save/add flows as contextual guidance.
+
+> **11) Wishlist + Price Drop Tracking**
+> As a user, I want to track desired items and receive price-drop alerts so that I can buy at the right time.
+>
+> **Acceptance Criteria**
+> - Users can add and organize wishlist items by category, brand, and priority.
+> - Users can set target prices and alert thresholds per item.
+> - The app sends alerts when prices drop below configured thresholds.
+
+> **12) Occasion-Based Outfit Builder**
+> As a user, I want outfit suggestions by event type (work, travel, formal, casual) so that I can prepare quickly for specific contexts.
+>
+> **Acceptance Criteria**
+> - Users can select an occasion template and optional constraints (weather, dress code, color palette).
+> - The builder proposes complete outfits with interchangeable alternatives.
+> - Users can save occasion presets for repeat use.
+
+> **13) Packing List Planner (Trip Mode)**
+> As a user, I want to build packing lists from my closet so that travel prep is faster and I avoid overpacking.
+>
+> **Acceptance Criteria**
+> - Users can create trip plans with destination, dates, and expected weather.
+> - The planner suggests items by outfit count, activities, and laundry access assumptions.
+> - Users can track packed status and export/share the packing checklist.
+
+> **14) Community Lookbook / Public Collections**
+> As a user, I want to publish selected outfits and browse others’ looks so that I get inspiration.
+>
+> **Acceptance Criteria**
+> - Users can publish outfits with visibility controls and optional tags.
+> - Users can browse, search, and filter public lookbooks by style, season, and occasion.
+> - Moderation controls exist for reporting and hiding inappropriate content.
+
+> **15) Wardrobe Health Dashboard**
+> As a user, I want insights like most-used colors/styles and underused items so that I can optimize my closet decisions.
+>
+> **Acceptance Criteria**
+> - The dashboard shows usage metrics (wear frequency, color distribution, category balance).
+> - The dashboard highlights underused items and recommends actionable next looks.
+> - Users can view trends over weekly, monthly, and seasonal intervals.
