@@ -8,6 +8,8 @@ const renderSaved = (props = {}) => render(
       closets={[]}
       authUser={{ userId: 'user-1', favoriteClosetIds: [] }}
       loading={false}
+      error=""
+      onRetry={jest.fn()}
       onTrackViewed={jest.fn()}
       onToggleFavorite={jest.fn()}
       onNotify={jest.fn()}
@@ -36,5 +38,15 @@ describe('Saved', () => {
 
     await waitFor(() => expect(onToggleFavorite).toHaveBeenCalledWith('c1'));
     await waitFor(() => expect(onNotify).toHaveBeenCalledWith('Removed from saved.'));
+  });
+
+  it('shows error recovery actions and retries fetch', () => {
+    const onRetry = jest.fn();
+    renderSaved({ error: 'Could not load saved closets.', onRetry });
+
+    expect(screen.getByText('Could not load saved closets.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Browse closets' }).getAttribute('href')).toBe('/browse');
   });
 });

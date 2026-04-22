@@ -27,6 +27,7 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Trailer/watch lookbook screen per closet
 - Coat notes management: create, update, delete
 - Saved closets/favorites per user profile
+- Dedicated Saved flow recovery UX with retry + browse actions on fetch errors
 - Recently viewed / continue browsing on Home
 - Auth/profile basics (register/login) wired to header actions
 - Token-based auth with access + refresh lifecycle (rotation + logout revocation) and guarded routes
