@@ -322,3 +322,45 @@ closet/
 ├── closets.postman_collection.json
 └── README.md
 ```
+
+## Future Features & Roadmap (User Stories)
+
+> **1) Outfit Planner Calendar**
+> As a logged-in user, I want to plan outfits on a calendar so that I can organize what I will wear ahead of time.
+>
+> **Acceptance Criteria**
+> - Users can create, edit, and remove outfit plans for specific dates.
+> - An outfit plan can reference one or more closets/coats already saved in the app.
+> - Planned outfits are shown in both calendar view and a simple upcoming list view.
+
+> **2) Personalized Closet Recommendations**
+> As a user, I want personalized closet recommendations so that I can discover styles that better match my preferences.
+>
+> **Acceptance Criteria**
+> - Recommendations are based on user interactions (recently viewed, saved, and filter usage).
+> - The home screen displays a dedicated “Recommended for you” section.
+> - Recommendations degrade gracefully to popular closets for new users with limited activity.
+
+> **3) Image Upload with Auto-Tagging**
+> As a user, I want to upload closet and coat images with suggested tags so that organizing my wardrobe is faster.
+>
+> **Acceptance Criteria**
+> - Users can upload images during closet/coat create and update flows.
+> - The system suggests tags (e.g., color, season, style) that users can accept or edit.
+> - Uploaded assets are validated for type/size and stored with associated closet/coat records.
+
+> **4) Advanced Search Alerts**
+> As a user, I want to save searches and receive alerts for new matching closets so that I do not miss relevant additions.
+>
+> **Acceptance Criteria**
+> - Users can save a search query with active filters (style, season, color, text query).
+> - The system checks new/updated closets against saved searches.
+> - Users can manage alert preferences (in-app and/or email) from profile settings.
+
+> **5) Closet Sharing & Collaboration**
+> As a user, I want to share selected closets with friends or collaborators so that we can plan looks together.
+>
+> **Acceptance Criteria**
+> - Users can generate share links for specific closets with configurable visibility.
+> - Users can invite collaborators with view-only or edit permissions.
+> - Audit metadata tracks who updated closet details and when.
