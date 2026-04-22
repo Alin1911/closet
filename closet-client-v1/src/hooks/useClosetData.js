@@ -17,6 +17,8 @@ export default function useClosetData() {
   const [closet, setCloset] = useState({});
   const [coats, setCoats] = useState([]);
   const [savedClosets, setSavedClosets] = useState([]);
+  const [savedLoading, setSavedLoading] = useState(false);
+  const [savedError, setSavedError] = useState('');
   const [closetsLoading, setClosetsLoading] = useState(true);
   const [closetsError, setClosetsError] = useState('');
   const [closetLoading, setClosetLoading] = useState(false);
@@ -266,6 +268,7 @@ export default function useClosetData() {
     }
     updateAuthUser(null);
     setSavedClosets([]);
+    setSavedError('');
     trackEvent('logout');
   }, [authUser?.token, updateAuthUser]);
 
@@ -282,14 +285,24 @@ export default function useClosetData() {
   const refreshSavedClosets = useCallback(async () => {
     if (!authUser?.userId) {
       setSavedClosets([]);
+      setSavedError('');
       return;
     }
-    const response = await api.get(`/api/v1/users/${authUser.userId}/favorites`);
-    setSavedClosets(response.data || []);
+    setSavedLoading(true);
+    setSavedError('');
+    try {
+      const response = await api.get(`/api/v1/users/${authUser.userId}/favorites`);
+      setSavedClosets(response.data || []);
+    } catch (error) {
+      console.error(error);
+      setSavedError('Could not load saved closets.');
+    } finally {
+      setSavedLoading(false);
+    }
   }, [authUser?.userId]);
 
   useEffect(() => {
-    refreshSavedClosets().catch((error) => console.error(error));
+    refreshSavedClosets();
   }, [refreshSavedClosets]);
 
   const handleToggleFavorite = useCallback(async (closetId) => {
@@ -305,6 +318,10 @@ export default function useClosetData() {
     trackEvent(isSaved ? 'closet_unsaved' : 'closet_saved', { closetId });
     return response?.data?.message || (isSaved ? 'Removed from saved.' : 'Saved.');
   }, [authUser, refreshSavedClosets, syncUserFromResponse]);
+
+  const retrySavedFetch = useCallback(() => {
+    refreshSavedClosets();
+  }, [refreshSavedClosets]);
 
   const recentlyViewedClosets = useMemo(() => recentlyViewedIds
     .map((id) => closets.find((item) => item.id === id))
@@ -325,6 +342,8 @@ export default function useClosetData() {
     coats,
     setCoats,
     savedClosets,
+    savedLoading,
+    savedError,
     closetsLoading,
     closetsError,
     closetLoading,
@@ -348,6 +367,7 @@ export default function useClosetData() {
     browseError,
     onBrowseFilterChange,
     resetBrowseFilters,
-    retryBrowseFetch
+    retryBrowseFetch,
+    retrySavedFetch
   };
 }

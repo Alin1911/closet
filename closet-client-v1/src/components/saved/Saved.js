@@ -3,7 +3,7 @@ import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import ClosetGridSkeleton from '../common/ClosetGridSkeleton';
 
-export default function Saved({ closets, authUser, loading, onTrackViewed, onToggleFavorite, onNotify }) {
+export default function Saved({ closets, authUser, loading, error, onRetry, onTrackViewed, onToggleFavorite, onNotify }) {
   const trailerIdFromLink = (link) => (link ? link.substring(link.length - 11) : null);
 
   if (!authUser) {
@@ -18,6 +18,19 @@ export default function Saved({ closets, authUser, loading, onTrackViewed, onTog
 
   if (loading) {
     return <Container className="py-4"><ClosetGridSkeleton count={3} /></Container>;
+  }
+
+  if (error) {
+    return (
+      <Container className="py-4 text-center">
+        <h2>Saved closets</h2>
+        <p className="text-danger" aria-live="assertive">{error}</p>
+        <div className="d-flex align-items-center justify-content-center flex-wrap gap-2">
+          <Button variant="outline-info" onClick={onRetry}>Retry</Button>
+          <Button as={Link} to="/browse" variant="outline-light">Browse closets</Button>
+        </div>
+      </Container>
+    );
   }
 
   return (
