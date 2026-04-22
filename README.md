@@ -330,7 +330,7 @@ closet/
 >
 > **Acceptance Criteria**
 > - Users can create, edit, and remove outfit plans for specific dates.
-> - An outfit plan can reference one or more closets and coat-note entries already saved in the app.
+> - An outfit plan can reference one or more closets and coat entries already saved in the app.
 > - Planned outfits are shown in both calendar view and a simple upcoming list view.
 
 > **2) Personalized Closet Recommendations**
