@@ -10,7 +10,7 @@ Companion mobile app for the Closet platform. It mirrors core web flows by using
 ## Setup
 
 ```bash
-cd /home/runner/work/closet/closet/mobile-app
+cd mobile-app
 npm install
 cp .env.example .env
 npx expo start

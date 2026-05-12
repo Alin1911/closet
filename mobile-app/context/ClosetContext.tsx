@@ -15,7 +15,7 @@ import {
   updateCoat,
   updateProfile,
 } from '../services/api/closetApi';
-import api, { setAuthToken } from '../services/api/client';
+import api, { ApiRequestConfig, setAuthToken } from '../services/api/client';
 import { AuthUser, Closet, Coat } from '../types/models';
 
 const AUTH_KEY = 'closetMobileAuthUser';
@@ -277,7 +277,7 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
     const interceptor = api.interceptors.response.use(
       (response) => response,
       async (error) => {
-        const original = error?.config;
+        const original = (error?.config || {}) as ApiRequestConfig;
         if (error?.response?.status !== 401 || !authUser?.refreshToken || original?._retry || original?._skipAuthRefresh) {
           return Promise.reject(error);
         }
