@@ -278,7 +278,7 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
       (response) => response,
       async (error) => {
         const original = error?.config;
-        if (error?.response?.status !== 401 || !authUser?.refreshToken || original?._retry) {
+        if (error?.response?.status !== 401 || !authUser?.refreshToken || original?._retry || original?._skipAuthRefresh) {
           return Promise.reject(error);
         }
         original._retry = true;
