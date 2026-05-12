@@ -256,6 +256,46 @@ npm install
 npm start
 ```
 
+## Mobile Application (React Native)
+
+### What it does
+The `mobile-app` project is an Expo React Native companion app that mirrors the website flows: browse closets, view closet details, watch lookbooks, manage item notes, save favorites, and handle profile/auth actions against the same Java REST APIs.
+
+### Setup Instructions
+```bash
+cd /home/runner/work/closet/closet/mobile-app
+npm install
+cp .env.example .env
+npx expo start
+```
+
+Set the API base URL in `mobile-app/.env`:
+```env
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+### Implemented Features
+- [x] Home flow with closet list and recently viewed section
+- [x] Browse flow with search/filter/sort controls
+- [x] Closet detail flow with related closets
+- [x] Lookbook trailer screen (YouTube embed)
+- [x] Item notes CRUD for a closet
+- [x] Saved closets flow (auth-protected behavior)
+- [x] Profile flow for login/register/update/logout
+- [x] Shared Axios API client with bearer-token + refresh handling
+- [x] React Navigation stack + tabs with functional components
+
+### New APIs Created
+- None. Existing backend endpoints already cover the mobile feature set.
+
+### TODOs / Future Work
+- Add richer browse UX parity for facet counts and pagination metadata headers
+- Improve mobile media optimization (image placeholders, progressive loading, caching)
+- Add deeper offline handling and retry UX across all screens
+- Add end-to-end tests for mobile flows (auth, saved, coats CRUD, trailer)
+- Add push-notification hooks for future product alerts/recommendations
+- Harden secure token storage strategy for production mobile release
+
 Build frontend:
 ```bash
 npm run build
