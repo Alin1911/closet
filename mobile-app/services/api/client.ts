@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
@@ -8,6 +8,11 @@ const api = axios.create({
     'ngrok-skip-browser-warning': 'true',
   },
 });
+
+export type ApiRequestConfig = AxiosRequestConfig & {
+  _retry?: boolean;
+  _skipAuthRefresh?: boolean;
+};
 
 export const setAuthToken = (token?: string | null) => {
   if (token) {

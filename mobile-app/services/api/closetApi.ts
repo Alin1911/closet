@@ -1,4 +1,4 @@
-import api from './client';
+import api, { ApiRequestConfig } from './client';
 import { ApiEnvelope, AuthUser, Closet, Coat } from '../../types/models';
 
 export const fetchClosets = async (params: Record<string, string | number | undefined> = {}) => {
@@ -55,12 +55,18 @@ export const updateProfile = async (userId: string, payload: { displayName?: str
 };
 
 export const refreshToken = async (refreshTokenValue: string) => {
-  const response = await api.post<ApiEnvelope<AuthUser>>('/api/v1/auth/refresh', { refreshToken: refreshTokenValue });
+  const config: ApiRequestConfig = { _skipAuthRefresh: true };
+  const response = await api.post<ApiEnvelope<AuthUser>>(
+    '/api/v1/auth/refresh',
+    { refreshToken: refreshTokenValue },
+    config,
+  );
   return response.data;
 };
 
 export const logout = async () => {
-  await api.post('/api/v1/auth/logout', {});
+  const config: ApiRequestConfig = { _skipAuthRefresh: true };
+  await api.post('/api/v1/auth/logout', {}, config);
 };
 
 export const fetchFavorites = async (userId: string) => {
