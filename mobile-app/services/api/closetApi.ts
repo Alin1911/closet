@@ -1,9 +1,37 @@
 import api, { ApiRequestConfig } from './client';
-import { ApiEnvelope, AuthUser, Closet, Coat } from '../../types/models';
+import { ApiEnvelope, AuthUser, BrowseMeta, Closet, ClosetListResponse, Coat } from '../../types/models';
 
 export const fetchClosets = async (params: Record<string, string | number | undefined> = {}) => {
   const response = await api.get<Closet[]>('/api/v1/closets', { params });
   return response.data;
+};
+
+const parseHeaderObject = (header?: string) => {
+  if (!header) {
+    return {};
+  }
+  try {
+    return JSON.parse(header);
+  } catch {
+    return {};
+  }
+};
+
+export const fetchClosetsWithMeta = async (
+  params: Record<string, string | number | undefined> = {},
+): Promise<ClosetListResponse> => {
+  const response = await api.get<Closet[]>('/api/v1/closets', { params });
+  const items = response.data ?? [];
+  const meta: BrowseMeta = {
+    totalCount: Number(response.headers['x-total-count'] ?? items.length),
+    totalPages: Number(response.headers['x-total-pages'] ?? (items.length ? 1 : 0)),
+    page: Number(response.headers['x-page'] ?? Number(params.page ?? 0)),
+    size: Number(response.headers['x-size'] ?? Number(params.size ?? items.length || 12)),
+    styleCounts: parseHeaderObject(response.headers['x-facet-styles']),
+    seasonCounts: parseHeaderObject(response.headers['x-facet-seasons']),
+    colorCounts: parseHeaderObject(response.headers['x-facet-colors']),
+  };
+  return { items, meta };
 };
 
 export const fetchClosetById = async (id: string) => {

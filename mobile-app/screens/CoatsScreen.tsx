@@ -71,7 +71,7 @@ export default function CoatsScreen() {
       {actionError ? <ErrorState message={actionError} /> : null}
 
       {coatsLoading ? <LoadingState /> : null}
-      {!coatsLoading && coatsError ? <ErrorState message={coatsError} /> : null}
+      {!coatsLoading && coatsError ? <ErrorState message={coatsError} onRetry={() => loadClosetAndCoats(closetId)} /> : null}
       {!coatsLoading && !coatsError && !coats.length ? <EmptyState message="No item notes yet." /> : null}
 
       {!coatsLoading && !coatsError

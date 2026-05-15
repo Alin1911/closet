@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export function LoadingState() {
   return (
@@ -9,10 +9,23 @@ export function LoadingState() {
   );
 }
 
-export function ErrorState({ message }: { message: string }) {
+export function ErrorState({
+  message,
+  onRetry,
+  retryLabel = 'Retry',
+}: {
+  message: string;
+  onRetry?: () => void;
+  retryLabel?: string;
+}) {
   return (
     <View style={styles.center}>
       <Text style={styles.error}>{message}</Text>
+      {onRetry ? (
+        <Pressable onPress={onRetry} style={styles.retryButton}>
+          <Text style={styles.retryButtonText}>{retryLabel}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -32,6 +45,18 @@ const styles = StyleSheet.create({
   },
   error: {
     color: '#ff6f6f',
+  },
+  retryButton: {
+    marginTop: 10,
+    borderColor: '#4eb8ff',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  retryButtonText: {
+    color: '#cceeff',
+    fontWeight: '600',
   },
   empty: {
     color: '#bdbdbd',

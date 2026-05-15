@@ -30,3 +30,18 @@ export type ApiEnvelope<T> = {
   message: string;
   data: T;
 };
+
+export type BrowseMeta = {
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  size: number;
+  styleCounts: Record<string, number>;
+  seasonCounts: Record<string, number>;
+  colorCounts: Record<string, number>;
+};
+
+export type ClosetListResponse = {
+  items: Closet[];
+  meta: BrowseMeta;
+};

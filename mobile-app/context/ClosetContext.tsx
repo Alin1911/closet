@@ -5,6 +5,7 @@ import {
   deleteCoat,
   fetchClosetById,
   fetchClosets,
+  fetchClosetsWithMeta,
   fetchCoats,
   fetchFavorites,
   loginUser,
@@ -16,19 +17,42 @@ import {
   updateProfile,
 } from '../services/api/closetApi';
 import api, { ApiRequestConfig, setAuthToken } from '../services/api/client';
-import { AuthUser, Closet, Coat } from '../types/models';
+import { AuthUser, BrowseMeta, Closet, Coat } from '../types/models';
 
 const AUTH_KEY = 'closetMobileAuthUser';
 const RECENT_KEY = 'closetMobileRecentlyViewed';
+const PREF_KEY = 'closetMobileBrowsePreferences';
+const RECOMMENDATION_LIMIT = 6;
+const MIN_RECENT_WEIGHT = 0;
+const MAX_RECENT_WEIGHT = 8;
+const FAVORITE_WEIGHT = 80;
+const RECENT_VIEW_MULTIPLIER = 10;
+const STYLE_WEIGHT = 8;
+const SEASON_WEIGHT = 6;
+const COLOR_WEIGHT = 5;
+const TRAILER_BONUS = 1;
+const FILTER_PREFERENCE_KEYS: Array<'style' | 'season' | 'color'> = ['style', 'season', 'color'];
+
+const EMPTY_BROWSE_META: BrowseMeta = {
+  totalCount: 0,
+  totalPages: 0,
+  page: 0,
+  size: 12,
+  styleCounts: {},
+  seasonCounts: {},
+  colorCounts: {},
+};
 
 type ClosetContextValue = {
   closets: Closet[];
   browseItems: Closet[];
+  browseMeta: BrowseMeta;
   savedClosets: Closet[];
   coats: Coat[];
   currentCloset: Closet | null;
   authUser: AuthUser | null;
   recentlyViewedClosets: Closet[];
+  recommendedClosets: Closet[];
   loading: boolean;
   browseLoading: boolean;
   savedLoading: boolean;
@@ -57,11 +81,17 @@ const ClosetContext = createContext<ClosetContextValue | null>(null);
 export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
   const [closets, setClosets] = useState<Closet[]>([]);
   const [browseItems, setBrowseItems] = useState<Closet[]>([]);
+  const [browseMeta, setBrowseMeta] = useState<BrowseMeta>(EMPTY_BROWSE_META);
   const [savedClosets, setSavedClosets] = useState<Closet[]>([]);
   const [coats, setCoats] = useState<Coat[]>([]);
   const [currentCloset, setCurrentCloset] = useState<Closet | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [browsePreferenceCounts, setBrowsePreferenceCounts] = useState<{
+    style: Record<string, number>;
+    season: Record<string, number>;
+    color: Record<string, number>;
+  }>({ style: {}, season: {}, color: {} });
   const [loading, setLoading] = useState(false);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [savedLoading, setSavedLoading] = useState(false);
@@ -96,6 +126,19 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
       if (storedRecent) {
         setRecentlyViewedIds(JSON.parse(storedRecent));
       }
+      const storedPrefs = await AsyncStorage.getItem(PREF_KEY);
+      if (storedPrefs) {
+        try {
+          const parsed = JSON.parse(storedPrefs);
+          setBrowsePreferenceCounts({
+            style: parsed?.style || {},
+            season: parsed?.season || {},
+            color: parsed?.color || {},
+          });
+        } catch {
+          setBrowsePreferenceCounts({ style: {}, season: {}, color: {} });
+        }
+      }
     };
     bootstrap();
   }, []);
@@ -117,14 +160,36 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
     setBrowseLoading(true);
     setBrowseError('');
     try {
-      const data = await fetchClosets(filters);
-      setBrowseItems(data);
+      const data = await fetchClosetsWithMeta(filters);
+      setBrowseItems(data.items);
+      setBrowseMeta(data.meta);
+      const nextPreferences = FILTER_PREFERENCE_KEYS.reduce(
+        (acc, key) => {
+          const selected = filters[key];
+          if (typeof selected === 'string' && selected.trim()) {
+            acc[key][selected] = (acc[key][selected] || 0) + 1;
+          }
+          return acc;
+        },
+        {
+          style: { ...browsePreferenceCounts.style },
+          season: { ...browsePreferenceCounts.season },
+          color: { ...browsePreferenceCounts.color },
+        },
+      );
+      setBrowsePreferenceCounts(nextPreferences);
+      await AsyncStorage.setItem(PREF_KEY, JSON.stringify(nextPreferences));
     } catch {
       setBrowseError('Could not load browse results.');
+      setBrowseMeta({
+        ...EMPTY_BROWSE_META,
+        page: Number(filters.page ?? EMPTY_BROWSE_META.page),
+        size: Number(filters.size ?? EMPTY_BROWSE_META.size),
+      });
     } finally {
       setBrowseLoading(false);
     }
-  }, []);
+  }, [browsePreferenceCounts.color, browsePreferenceCounts.season, browsePreferenceCounts.style]);
 
   const loadSavedForUser = useCallback(async (userId?: string) => {
     if (!userId) {
@@ -317,14 +382,45 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
     [closets, recentlyViewedIds],
   );
 
+  const recommendedClosets = useMemo(() => {
+    if (!closets.length) {
+      return [];
+    }
+    const favoriteIds = new Set(authUser?.favoriteClosetIds || []);
+    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(MIN_RECENT_WEIGHT, MAX_RECENT_WEIGHT - index)]));
+    const score = (item: Closet) => {
+      let total = 0;
+      if (favoriteIds.has(item.id)) {
+        total += FAVORITE_WEIGHT;
+      }
+      total += (recentWeights.get(item.id) || 0) * RECENT_VIEW_MULTIPLIER;
+      total += (browsePreferenceCounts.style[item.style || ''] || 0) * STYLE_WEIGHT;
+      total += (browsePreferenceCounts.season[item.season || ''] || 0) * SEASON_WEIGHT;
+      total += (browsePreferenceCounts.color[item.color || ''] || 0) * COLOR_WEIGHT;
+      if (item.trailerLink) {
+        total += TRAILER_BONUS;
+      }
+      return total;
+    };
+    const ranked = closets
+      .map((item) => ({ item, score: score(item) }))
+      .sort((left, right) => right.score - left.score);
+    if ((ranked[0]?.score || 0) <= 0) {
+      return closets.slice(0, RECOMMENDATION_LIMIT);
+    }
+    return ranked.slice(0, RECOMMENDATION_LIMIT).map((entry) => entry.item);
+  }, [authUser?.favoriteClosetIds, browsePreferenceCounts.color, browsePreferenceCounts.season, browsePreferenceCounts.style, closets, recentlyViewedIds]);
+
   const value: ClosetContextValue = {
     closets,
     browseItems,
+    browseMeta,
     savedClosets,
     coats,
     currentCloset,
     authUser,
     recentlyViewedClosets,
+    recommendedClosets,
     loading,
     browseLoading,
     savedLoading,
