@@ -30,6 +30,7 @@ const STYLE_WEIGHT = 8;
 const SEASON_WEIGHT = 6;
 const COLOR_WEIGHT = 5;
 const TRAILER_BONUS = 1;
+const FILTER_PREFERENCE_KEYS: Array<'style' | 'season' | 'color'> = ['style', 'season', 'color'];
 
 const EMPTY_BROWSE_META: BrowseMeta = {
   totalCount: 0,
@@ -161,8 +162,7 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await fetchClosetsWithMeta(filters);
       setBrowseItems(data.items);
       setBrowseMeta(data.meta);
-      const keys: Array<'style' | 'season' | 'color'> = ['style', 'season', 'color'];
-      const nextPreferences = keys.reduce(
+      const nextPreferences = FILTER_PREFERENCE_KEYS.reduce(
         (acc, key) => {
           const selected = filters[key];
           if (typeof selected === 'string' && selected.trim()) {

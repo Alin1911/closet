@@ -60,7 +60,7 @@ export default function BrowseScreen() {
       <View style={styles.row}>
         <FilterButton label="Newest" active={sort === 'newest'} onPress={() => setSort('newest')} />
         <FilterButton label="Name" active={sort === 'name'} onPress={() => setSort('name')} />
-        <FilterButton label="Apply" active onPress={applyFromStart} />
+        <FilterButton label="Search" active onPress={applyFromStart} />
       </View>
       {!browseLoading && !browseError ? (
         <Text style={styles.metaText}>
@@ -104,22 +104,14 @@ export default function BrowseScreen() {
           <FilterButton
             label="Prev"
             active={false}
-            onPress={() => {
-              if (page <= 0) {
-                return;
-              }
-              setPage((previous) => previous - 1);
-            }}
+            disabled={page <= 0}
+            onPress={() => setPage((previous) => previous - 1)}
           />
           <FilterButton
             label="Next"
             active={false}
-            onPress={() => {
-              if (page + 1 >= browseMeta.totalPages) {
-                return;
-              }
-              setPage((previous) => previous + 1);
-            }}
+            disabled={page + 1 >= browseMeta.totalPages}
+            onPress={() => setPage((previous) => previous + 1)}
           />
         </View>
       ) : null}
@@ -127,10 +119,10 @@ export default function BrowseScreen() {
   );
 }
 
-function FilterButton({ label, active, onPress }: { label: string; active?: boolean; onPress: () => void }) {
+function FilterButton({ label, active, onPress, disabled }: { label: string; active?: boolean; onPress: () => void; disabled?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={[styles.filterButton, active ? styles.filterButtonActive : null]}>
-      <Text style={styles.filterButtonLabel}>{label}</Text>
+    <Pressable disabled={disabled} onPress={onPress} style={[styles.filterButton, active ? styles.filterButtonActive : null, disabled ? styles.filterButtonDisabled : null]}>
+      <Text style={[styles.filterButtonLabel, disabled ? styles.filterButtonLabelDisabled : null]}>{label}</Text>
     </Pressable>
   );
 }
@@ -157,5 +149,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   filterButtonActive: { backgroundColor: '#163853' },
+  filterButtonDisabled: { borderColor: '#4a4a4a', backgroundColor: '#222' },
   filterButtonLabel: { color: '#cceeff' },
+  filterButtonLabelDisabled: { color: '#777' },
 });
