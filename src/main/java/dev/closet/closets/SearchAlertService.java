@@ -2,13 +2,18 @@ package dev.closet.closets;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class SearchAlertService {
@@ -16,11 +21,24 @@ public class SearchAlertService {
     private SearchAlertRepository searchAlertRepository;
 
     @Autowired
-    private ClosetRepository closetRepository;
+    private MongoTemplate mongoTemplate;
 
     public List<SearchAlertResponse> listAlerts(ObjectId userId) {
         return searchAlertRepository.findByUserId(userId).stream()
-                .sorted(Comparator.comparing(SearchAlert::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .sorted((left, right) -> {
+                    Instant leftUpdated = left.getUpdatedAt();
+                    Instant rightUpdated = right.getUpdatedAt();
+                    if (leftUpdated == null && rightUpdated == null) {
+                        return 0;
+                    }
+                    if (leftUpdated == null) {
+                        return 1;
+                    }
+                    if (rightUpdated == null) {
+                        return -1;
+                    }
+                    return rightUpdated.compareTo(leftUpdated);
+                })
                 .map(this::toResponseWithMatches)
                 .toList();
     }
@@ -79,23 +97,16 @@ public class SearchAlertService {
 
     private SearchAlertResponse toResponseWithMatches(SearchAlert alert) {
         Instant threshold = alert.getLastCheckedAt() == null ? alert.getCreatedAt() : alert.getLastCheckedAt();
-        List<Closet> matchingClosets = closetRepository.findAll().stream()
-                .filter(closet -> matchesAlert(closet, alert))
-                .toList();
-        List<Closet> newMatches = matchingClosets.stream()
-                .filter(closet -> {
-                    if (threshold == null) {
-                        return true;
-                    }
-                    Instant updatedAt = closet.getUpdatedAt() == null ? closet.getCreatedAt() : closet.getUpdatedAt();
-                    return updatedAt != null && updatedAt.isAfter(threshold);
-                })
-                .toList();
-        Instant newestMatchUpdatedAt = newMatches.stream()
-                .map(closet -> closet.getUpdatedAt() == null ? closet.getCreatedAt() : closet.getUpdatedAt())
-                .filter(instant -> instant != null)
-                .max(Comparator.naturalOrder())
-                .orElse(null);
+        Query newMatchQuery = buildAlertQuery(alert, threshold);
+        long newMatchCountLong = mongoTemplate.count(newMatchQuery, Closet.class);
+        int newMatchCount = newMatchCountLong > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) newMatchCountLong;
+
+        Query newestMatchQuery = buildAlertQuery(alert, threshold);
+        newestMatchQuery.with(Sort.by(Sort.Direction.DESC, "updatedAt"));
+        newestMatchQuery.limit(1);
+        Closet newestMatch = mongoTemplate.findOne(newestMatchQuery, Closet.class);
+        Instant newestMatchUpdatedAt = newestMatch == null ? null : (newestMatch.getUpdatedAt() == null ? newestMatch.getCreatedAt() : newestMatch.getUpdatedAt());
+
         return new SearchAlertResponse(
                 alert.getId().toHexString(),
                 alert.getQuery(),
@@ -104,7 +115,7 @@ public class SearchAlertService {
                 alert.getColor(),
                 alert.isInAppEnabled(),
                 alert.isEmailEnabled(),
-                newMatches.size(),
+                newMatchCount,
                 newestMatchUpdatedAt,
                 alert.getCreatedAt(),
                 alert.getUpdatedAt(),
@@ -112,34 +123,39 @@ public class SearchAlertService {
         );
     }
 
-    private boolean matchesAlert(Closet closet, SearchAlert alert) {
-        String styleFilter = normalize(alert.getStyle());
-        String seasonFilter = normalize(alert.getSeason());
-        String colorFilter = normalize(alert.getColor());
-        String queryFilter = normalize(alert.getQuery());
+    private Query buildAlertQuery(SearchAlert alert, Instant threshold) {
+        Query query = new Query();
+        List<Criteria> andConditions = new ArrayList<>();
 
-        if (styleFilter != null && !styleFilter.equals(normalize(closet.getStyle()))) {
-            return false;
+        if (normalize(alert.getStyle()) != null) {
+            andConditions.add(Criteria.where("style").regex("^" + Pattern.quote(alert.getStyle().trim()) + "$", "i"));
         }
-        if (seasonFilter != null && !seasonFilter.equals(normalize(closet.getSeason()))) {
-            return false;
+        if (normalize(alert.getSeason()) != null) {
+            andConditions.add(Criteria.where("season").regex("^" + Pattern.quote(alert.getSeason().trim()) + "$", "i"));
         }
-        if (colorFilter != null && !colorFilter.equals(normalize(closet.getColor()))) {
-            return false;
+        if (normalize(alert.getColor()) != null) {
+            andConditions.add(Criteria.where("color").regex("^" + Pattern.quote(alert.getColor().trim()) + "$", "i"));
         }
-        if (queryFilter == null) {
-            return true;
-        }
-        return containsNormalized(closet.getName(), queryFilter)
-                || containsNormalized(closet.getDescription(), queryFilter)
-                || containsNormalized(closet.getStyle(), queryFilter)
-                || containsNormalized(closet.getSeason(), queryFilter)
-                || containsNormalized(closet.getColor(), queryFilter);
-    }
 
-    private boolean containsNormalized(String source, String query) {
-        String normalizedSource = normalize(source);
-        return normalizedSource != null && normalizedSource.contains(query);
+        if (normalize(alert.getQuery()) != null) {
+            String quoted = Pattern.quote(alert.getQuery().trim());
+            andConditions.add(new Criteria().orOperator(
+                    Criteria.where("name").regex(quoted, "i"),
+                    Criteria.where("description").regex(quoted, "i"),
+                    Criteria.where("style").regex(quoted, "i"),
+                    Criteria.where("season").regex(quoted, "i"),
+                    Criteria.where("color").regex(quoted, "i")
+            ));
+        }
+
+        if (threshold != null) {
+            andConditions.add(Criteria.where("updatedAt").gt(threshold));
+        }
+
+        if (!andConditions.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(andConditions.toArray(new Criteria[0])));
+        }
+        return query;
     }
 
     private String normalize(String value) {

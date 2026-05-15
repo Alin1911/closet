@@ -229,7 +229,7 @@ export default function Profile({
           <Col md={8}>
             <Card bg="dark" text="light" className="p-3">
               <h5>Search alerts</h5>
-              <p className="text-secondary mb-3">Save filters and get in-app/email alert preferences for new matching closets.</p>
+              <p className="text-secondary mb-3">Save filters and receive in-app/email alerts for new matching closets.</p>
               <Form onSubmit={createSearchAlert}>
                 <Row className="g-2">
                   <Col md={6}>

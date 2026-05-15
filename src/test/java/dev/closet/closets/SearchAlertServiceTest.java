@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.Instant;
 import java.util.List;
@@ -15,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,7 +27,7 @@ class SearchAlertServiceTest {
     private SearchAlertRepository searchAlertRepository;
 
     @Mock
-    private ClosetRepository closetRepository;
+    private MongoTemplate mongoTemplate;
 
     @InjectMocks
     private SearchAlertService searchAlertService;
@@ -48,12 +52,6 @@ class SearchAlertServiceTest {
                 now.minusSeconds(200)
         );
 
-        Closet oldMatch = new Closet();
-        oldMatch.setId(new ObjectId());
-        oldMatch.setName("Winter look");
-        oldMatch.setStyle("Classic");
-        oldMatch.setUpdatedAt(now.minusSeconds(300));
-
         Closet newMatch = new Closet();
         newMatch.setId(new ObjectId());
         newMatch.setName("New Winter look");
@@ -61,13 +59,15 @@ class SearchAlertServiceTest {
         newMatch.setUpdatedAt(now.minusSeconds(10));
 
         when(searchAlertRepository.findByUserId(userId)).thenReturn(List.of(alert));
-        when(closetRepository.findAll()).thenReturn(List.of(oldMatch, newMatch));
+        when(mongoTemplate.count(any(Query.class), eq(Closet.class))).thenReturn(1L);
+        when(mongoTemplate.findOne(any(Query.class), eq(Closet.class))).thenReturn(newMatch);
 
         List<SearchAlertResponse> responses = searchAlertService.listAlerts(userId);
 
         assertEquals(1, responses.size());
         assertEquals(1, responses.get(0).newMatchCount());
         assertEquals(newMatch.getUpdatedAt(), responses.get(0).newestMatchingClosetUpdatedAt());
+        verify(mongoTemplate).count(any(Query.class), eq(Closet.class));
     }
 
     @Test
@@ -97,7 +97,8 @@ class SearchAlertServiceTest {
         alert.setLastCheckedAt(Instant.now().minusSeconds(300));
         when(searchAlertRepository.findById(alertId)).thenReturn(Optional.of(alert));
         when(searchAlertRepository.save(any(SearchAlert.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(closetRepository.findAll()).thenReturn(List.of());
+        when(mongoTemplate.count(any(Query.class), eq(Closet.class))).thenReturn(0L);
+        when(mongoTemplate.findOne(any(Query.class), eq(Closet.class))).thenReturn(null);
 
         Optional<SearchAlertResponse> response = searchAlertService.acknowledgeAlert(userId, alertId);
 
