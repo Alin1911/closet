@@ -29,12 +29,6 @@ export default function BrowseScreen() {
     apply();
   }, [apply]);
 
-  useEffect(() => {
-    if (browseMeta.page !== page) {
-      setPage(browseMeta.page);
-    }
-  }, [browseMeta.page, page]);
-
   const topFacetSummary = [
     ['Styles', browseMeta.styleCounts],
     ['Seasons', browseMeta.seasonCounts],
@@ -60,7 +54,7 @@ export default function BrowseScreen() {
       <View style={styles.row}>
         <FilterButton label="Newest" active={sort === 'newest'} onPress={() => setSort('newest')} />
         <FilterButton label="Name" active={sort === 'name'} onPress={() => setSort('name')} />
-        <FilterButton label="Apply filters" active onPress={applyFromStart} />
+        <FilterButton label="Search from start" active onPress={applyFromStart} />
       </View>
       {!browseLoading && !browseError ? (
         <Text style={styles.metaText}>

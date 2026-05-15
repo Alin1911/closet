@@ -181,11 +181,11 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
       await AsyncStorage.setItem(PREF_KEY, JSON.stringify(nextPreferences));
     } catch {
       setBrowseError('Could not load browse results.');
-      setBrowseMeta((previous) => ({
-        ...previous,
-        page: Number(filters.page ?? previous.page),
-        size: Number(filters.size ?? previous.size),
-      }));
+      setBrowseMeta({
+        ...EMPTY_BROWSE_META,
+        page: Number(filters.page ?? EMPTY_BROWSE_META.page),
+        size: Number(filters.size ?? EMPTY_BROWSE_META.size),
+      });
     } finally {
       setBrowseLoading(false);
     }
