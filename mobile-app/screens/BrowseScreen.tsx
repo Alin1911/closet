@@ -19,6 +19,11 @@ export default function BrowseScreen() {
   const [size] = useState(12);
 
   const apply = useCallback(() => loadBrowse({ q, style, season, color, sort, page, size }), [color, loadBrowse, page, q, season, size, sort, style]);
+  const applyFromStart = useCallback(() => {
+    const firstPage = 0;
+    setPage(firstPage);
+    return loadBrowse({ q, style, season, color, sort, page: firstPage, size });
+  }, [color, loadBrowse, q, season, size, sort, style]);
 
   useEffect(() => {
     apply();
@@ -55,7 +60,7 @@ export default function BrowseScreen() {
       <View style={styles.row}>
         <FilterButton label="Newest" active={sort === 'newest'} onPress={() => setSort('newest')} />
         <FilterButton label="Name" active={sort === 'name'} onPress={() => setSort('name')} />
-        <FilterButton label="Apply" active onPress={() => { setPage(0); loadBrowse({ q, style, season, color, sort, page: 0, size }); }} />
+        <FilterButton label="Apply" active onPress={applyFromStart} />
       </View>
       {!browseLoading && !browseError ? (
         <Text style={styles.metaText}>

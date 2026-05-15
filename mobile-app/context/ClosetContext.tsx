@@ -23,6 +23,13 @@ const AUTH_KEY = 'closetMobileAuthUser';
 const RECENT_KEY = 'closetMobileRecentlyViewed';
 const PREF_KEY = 'closetMobileBrowsePreferences';
 const RECOMMENDATION_LIMIT = 6;
+const MAX_RECENT_WEIGHT = 8;
+const FAVORITE_WEIGHT = 80;
+const RECENT_VIEW_MULTIPLIER = 10;
+const STYLE_WEIGHT = 8;
+const SEASON_WEIGHT = 6;
+const COLOR_WEIGHT = 5;
+const TRAILER_BONUS = 1;
 
 const EMPTY_BROWSE_META: BrowseMeta = {
   totalCount: 0,
@@ -379,18 +386,18 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
       return [];
     }
     const favoriteIds = new Set(authUser?.favoriteClosetIds || []);
-    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(0, 8 - index)]));
+    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(0, MAX_RECENT_WEIGHT - index)]));
     const score = (item: Closet) => {
       let total = 0;
       if (favoriteIds.has(item.id)) {
-        total += 80;
+        total += FAVORITE_WEIGHT;
       }
-      total += (recentWeights.get(item.id) || 0) * 10;
-      total += (browsePreferenceCounts.style[item.style || ''] || 0) * 8;
-      total += (browsePreferenceCounts.season[item.season || ''] || 0) * 6;
-      total += (browsePreferenceCounts.color[item.color || ''] || 0) * 5;
+      total += (recentWeights.get(item.id) || 0) * RECENT_VIEW_MULTIPLIER;
+      total += (browsePreferenceCounts.style[item.style || ''] || 0) * STYLE_WEIGHT;
+      total += (browsePreferenceCounts.season[item.season || ''] || 0) * SEASON_WEIGHT;
+      total += (browsePreferenceCounts.color[item.color || ''] || 0) * COLOR_WEIGHT;
       if (item.trailerLink) {
-        total += 1;
+        total += TRAILER_BONUS;
       }
       return total;
     };
