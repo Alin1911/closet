@@ -58,3 +58,8 @@ textarea:focus-visible {
 .skip-link:focus-visible {
   left: 8px;
 }
+
+.planner-day-col {
+  flex: 0 0 14.2857%;
+  max-width: 14.2857%;
+}

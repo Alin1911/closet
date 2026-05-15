@@ -23,6 +23,7 @@ function Header({ authUser, onLogout }) {
                     <NavLink className="nav-link" to="/">Home</NavLink>
                     <NavLink className="nav-link" to="/browse">Browse</NavLink>
                     <NavLink className="nav-link" to="/saved">Saved</NavLink>
+                    <NavLink className="nav-link" to="/planner">Planner</NavLink>
                     <NavLink className="nav-link" to="/profile">Profile</NavLink>
                 </Nav>
                 {!authUser ? (

@@ -10,6 +10,7 @@ import Browse from './components/browse/Browse';
 import Saved from './components/saved/Saved';
 import Profile from './components/profile/Profile';
 import ClosetDetail from './components/closetDetail/ClosetDetail';
+import Planner from './components/planner/Planner';
 import { Toast, ToastContainer } from 'react-bootstrap';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import useClosetData from './hooks/useClosetData';
@@ -58,7 +59,14 @@ function App() {
     onBrowseFilterChange,
     resetBrowseFilters,
     retryBrowseFetch,
-    retrySavedFetch
+    retrySavedFetch,
+    outfitPlans,
+    outfitPlansLoading,
+    outfitPlansError,
+    refreshOutfitPlans,
+    createOutfitPlan,
+    updateOutfitPlan,
+    deleteOutfitPlan
   } = useClosetData();
   const [toast, setToast] = useState({ show: false, message: '' });
 
@@ -78,6 +86,7 @@ function App() {
           <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} recommendedClosets={recommendedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} onRetry={() => getClosets()} />} />
           <Route path="/browse" element={<Browse filters={browseFilters} items={browseItems} totalPages={browseTotalPages} totalCount={browseTotalCount} facetCounts={browseFacetCounts} loading={browseLoading} error={browseError} onFilterChange={onBrowseFilterChange} onResetFilters={resetBrowseFilters} onRetry={retryBrowseFetch} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path="/saved" element={<ProtectedRoute authUser={authUser}><Saved closets={savedClosets} loading={savedLoading} error={savedError} onRetry={retrySavedFetch} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} onNotify={showToast} /></ProtectedRoute>} />
+          <Route path="/planner" element={<ProtectedRoute authUser={authUser}><Planner closets={closets} plans={outfitPlans} loading={outfitPlansLoading} error={outfitPlansError} onRetry={refreshOutfitPlans} onCreate={createOutfitPlan} onUpdate={updateOutfitPlan} onDelete={deleteOutfitPlan} onNotify={showToast} /></ProtectedRoute>} />
           <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} onUpdateProfile={handleProfileUpdate} onNotify={showToast} />} />
           <Route path="/closets/:closetId" element={<ClosetDetail closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path='/trailer/:ytTrailerId' element={<Trailer/>} />
