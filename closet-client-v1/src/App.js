@@ -39,6 +39,7 @@ function App() {
     closetError,
     authUser,
     recentlyViewedClosets,
+    recommendedClosets,
     trackRecentlyViewed,
     getClosets,
     getClosetData,
@@ -74,7 +75,7 @@ function App() {
       <Header authUser={authUser} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<Layout/>}>
-          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} onRetry={() => getClosets()} />} />
+          <Route path="/" element={<Home closets={closets} loading={closetsLoading} error={closetsError} recentlyViewedClosets={recentlyViewedClosets} recommendedClosets={recommendedClosets} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} onRetry={() => getClosets()} />} />
           <Route path="/browse" element={<Browse filters={browseFilters} items={browseItems} totalPages={browseTotalPages} totalCount={browseTotalCount} facetCounts={browseFacetCounts} loading={browseLoading} error={browseError} onFilterChange={onBrowseFilterChange} onResetFilters={resetBrowseFilters} onRetry={retryBrowseFetch} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path="/saved" element={<ProtectedRoute authUser={authUser}><Saved closets={savedClosets} loading={savedLoading} error={savedError} onRetry={retrySavedFetch} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} onNotify={showToast} /></ProtectedRoute>} />
           <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} onUpdateProfile={handleProfileUpdate} onNotify={showToast} />} />

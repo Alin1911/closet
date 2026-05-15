@@ -12,6 +12,8 @@ const DEFAULT_BROWSE_FILTERS = {
   size: 12
 };
 
+const RECOMMENDATION_LIMIT = 6;
+
 export default function useClosetData() {
   const [closets, setClosets] = useState([]);
   const [closet, setCloset] = useState({});
@@ -30,6 +32,17 @@ export default function useClosetData() {
   const [recentlyViewedIds, setRecentlyViewedIds] = useState(() => {
     const raw = localStorage.getItem('closetRecentlyViewed');
     return raw ? JSON.parse(raw) : [];
+  });
+  const [browsePreferenceCounts, setBrowsePreferenceCounts] = useState(() => {
+    const raw = localStorage.getItem('closetBrowsePreferences');
+    if (!raw) {
+      return { style: {}, season: {}, color: {} };
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return { style: {}, season: {}, color: {} };
+    }
   });
 
   const [browseFilters, setBrowseFilters] = useState(DEFAULT_BROWSE_FILTERS);
@@ -156,6 +169,19 @@ export default function useClosetData() {
       }
     }
     setBrowseFilters((previous) => ({ ...previous, [name]: value, page: name === 'page' ? value : 0 }));
+    if ((name === 'style' || name === 'season' || name === 'color') && value) {
+      setBrowsePreferenceCounts((previous) => {
+        const next = {
+          ...previous,
+          [name]: {
+            ...(previous?.[name] || {}),
+            [value]: ((previous?.[name] || {})[value] || 0) + 1
+          }
+        };
+        localStorage.setItem('closetBrowsePreferences', JSON.stringify(next));
+        return next;
+      });
+    }
     if (name === 'q') {
       trackEvent('closet_search', { queryLength: (value || '').trim().length });
     }
@@ -327,6 +353,37 @@ export default function useClosetData() {
     .map((id) => closets.find((item) => item.id === id))
     .filter(Boolean), [closets, recentlyViewedIds]);
 
+  const recommendedClosets = useMemo(() => {
+    if (!closets.length) {
+      return [];
+    }
+    const favoriteIds = new Set(authUser?.favoriteClosetIds || []);
+    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(0, 8 - index)]));
+    const score = (item) => {
+      let total = 0;
+      if (favoriteIds.has(item.id)) {
+        total += 80;
+      }
+      total += (recentWeights.get(item.id) || 0) * 10;
+      total += (browsePreferenceCounts.style?.[item.style] || 0) * 8;
+      total += (browsePreferenceCounts.season?.[item.season] || 0) * 6;
+      total += (browsePreferenceCounts.color?.[item.color] || 0) * 5;
+      if (item.trailerLink) {
+        total += 1;
+      }
+      return total;
+    };
+
+    const ranked = closets
+      .map((item) => ({ item, score: score(item) }))
+      .sort((left, right) => right.score - left.score);
+
+    if ((ranked[0]?.score || 0) <= 0) {
+      return closets.slice(0, RECOMMENDATION_LIMIT);
+    }
+    return ranked.slice(0, RECOMMENDATION_LIMIT).map(({ item }) => item);
+  }, [authUser?.favoriteClosetIds, browsePreferenceCounts, closets, recentlyViewedIds]);
+
   const trackRecentlyViewed = useCallback((closetId) => {
     setRecentlyViewedIds((previous) => {
       const next = [closetId, ...previous.filter((id) => id !== closetId)].slice(0, 8);
@@ -350,6 +407,7 @@ export default function useClosetData() {
     closetError,
     authUser,
     recentlyViewedClosets,
+    recommendedClosets,
     trackRecentlyViewed,
     getClosets,
     getClosetData,

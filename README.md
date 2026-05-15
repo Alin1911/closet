@@ -33,6 +33,7 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Token-based auth with access + refresh lifecycle (rotation + logout revocation) and guarded routes
 - Profile editing (display name/password) for authenticated users
 - Search + pagination support with relevance ranking, typo tolerance, and faceted counts
+- Personalized recommendations on Home using user activity signals (recently viewed, saved, filter preferences) with graceful fallback
 - Toast feedback + skeleton loading states across core screens
 - DTO validation + consistent API response envelope for write/auth flows
 - REST API with Spring Web + Spring Data MongoDB, CORS enabled for `http://localhost:3000`
@@ -152,6 +153,9 @@ Next UX opportunities:
 - ✅ Centralized frontend query/state (React Query equivalent via shared query/state hook and cache)
 - ✅ Browser e2e regression coverage for core multi-page journeys and auth refresh flow
 - ✅ SLO burn-rate alerting and Alertmanager incident-routing template for production operations
+- ✅ Personalized home recommendations with graceful fallback to popular closets for low-activity users
+- ✅ Mobile browse metadata parity (facet counts + pagination metadata surfaced in UX)
+- ✅ Mobile retry/recovery UX expansion across key error states (home/browse/saved/coats)
 - ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
 
 ---
@@ -289,9 +293,7 @@ EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
 - None. Existing backend endpoints already cover the mobile feature set.
 
 ### TODOs / Future Work
-- Add richer browse UX parity for facet counts and pagination metadata headers
 - Improve mobile media optimization (image placeholders, progressive loading, caching)
-- Add deeper offline handling and retry UX across all screens
 - Add end-to-end tests for mobile flows (auth, saved, coats CRUD, trailer)
 - Add push-notification hooks for future product alerts/recommendations
 - Harden secure token storage strategy for production mobile release

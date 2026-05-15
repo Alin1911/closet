@@ -9,13 +9,13 @@ const trailerIdFromLink = (link?: string) => (link ? link.slice(-11) : undefined
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { closets, recentlyViewedClosets, loading, error, authUser, toggleSaved, trackViewed } = useCloset();
+  const { closets, recentlyViewedClosets, recommendedClosets, loading, error, authUser, toggleSaved, trackViewed, loadHome } = useCloset();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.heading}>Closet Home</Text>
       {loading ? <LoadingState /> : null}
-      {!loading && error ? <ErrorState message={error} /> : null}
+      {!loading && error ? <ErrorState message={error} onRetry={loadHome} /> : null}
       {!loading && !error && !closets.length ? <EmptyState message="No closets found yet." /> : null}
 
       {!loading && !error
@@ -41,6 +41,26 @@ export default function HomeScreen() {
             );
           })
         : null}
+
+      <View style={styles.section}>
+        <Text style={styles.subheading}>Recommended for you</Text>
+        {!recommendedClosets.length ? <EmptyState message="Recommendations will appear as you browse and save closets." /> : null}
+        {recommendedClosets.map((item) => {
+          const trailerId = trailerIdFromLink(item.trailerLink);
+          return (
+            <ClosetCard
+              key={`recommended-${item.id}`}
+              closet={item}
+              isSaved={authUser?.favoriteClosetIds?.includes(item.id)}
+              onPressDetails={() => navigation.navigate('ClosetDetail', { closetId: item.id })}
+              onPressCoats={() => navigation.navigate('Coats', { closetId: item.id })}
+              onPressTrailer={trailerId ? () => navigation.navigate('Trailer', { ytTrailerId: trailerId }) : undefined}
+              onToggleSaved={() => toggleSaved(item.id)}
+              disableSave={!authUser}
+            />
+          );
+        })}
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.subheading}>Continue browsing</Text>

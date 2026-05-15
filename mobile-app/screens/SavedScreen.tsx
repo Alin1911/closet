@@ -20,7 +20,7 @@ export default function SavedScreen() {
       <Text style={styles.heading}>Saved closets</Text>
       {!authUser ? <EmptyState message="Sign in from Profile to save closets." /> : null}
       {authUser && savedLoading ? <LoadingState /> : null}
-      {authUser && !savedLoading && savedError ? <ErrorState message={savedError} /> : null}
+      {authUser && !savedLoading && savedError ? <ErrorState message={savedError} onRetry={loadSaved} /> : null}
       {authUser && !savedLoading && !savedError && !savedClosets.length ? <EmptyState message="No saved closets yet." /> : null}
       {authUser && !savedLoading && !savedError
         ? savedClosets.map((item) => {

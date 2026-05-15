@@ -9,18 +9,41 @@ const trailerIdFromLink = (link?: string) => (link ? link.slice(-11) : undefined
 
 export default function BrowseScreen() {
   const navigation = useNavigation<any>();
-  const { browseItems, browseLoading, browseError, authUser, loadBrowse, toggleSaved, trackViewed } = useCloset();
+  const { browseItems, browseMeta, browseLoading, browseError, authUser, loadBrowse, toggleSaved, trackViewed } = useCloset();
   const [q, setQ] = useState('');
   const [style, setStyle] = useState('');
   const [season, setSeason] = useState('');
   const [color, setColor] = useState('');
   const [sort, setSort] = useState<'newest' | 'name'>('newest');
+  const [page, setPage] = useState(0);
+  const [size] = useState(12);
 
-  const apply = useCallback(() => loadBrowse({ q, style, season, color, sort, page: 0, size: 12 }), [color, loadBrowse, q, season, sort, style]);
+  const apply = useCallback(() => loadBrowse({ q, style, season, color, sort, page, size }), [color, loadBrowse, page, q, season, size, sort, style]);
 
   useEffect(() => {
     apply();
   }, [apply]);
+
+  useEffect(() => {
+    if (browseMeta.page !== page) {
+      setPage(browseMeta.page);
+    }
+  }, [browseMeta.page, page]);
+
+  const topFacetSummary = [
+    ['Styles', browseMeta.styleCounts],
+    ['Seasons', browseMeta.seasonCounts],
+    ['Colors', browseMeta.colorCounts],
+  ]
+    .map(([label, counts]) => {
+      const top = Object.entries(counts as Record<string, number>)
+        .sort((left, right) => right[1] - left[1])
+        .slice(0, 3)
+        .map(([name, count]) => `${name} (${count})`)
+        .join(', ');
+      return top ? `${label}: ${top}` : '';
+    })
+    .filter(Boolean);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -32,11 +55,20 @@ export default function BrowseScreen() {
       <View style={styles.row}>
         <FilterButton label="Newest" active={sort === 'newest'} onPress={() => setSort('newest')} />
         <FilterButton label="Name" active={sort === 'name'} onPress={() => setSort('name')} />
-        <FilterButton label="Apply" active onPress={apply} />
+        <FilterButton label="Apply" active onPress={() => { setPage(0); loadBrowse({ q, style, season, color, sort, page: 0, size }); }} />
       </View>
+      {!browseLoading && !browseError ? (
+        <Text style={styles.metaText}>
+          Showing {browseItems.length} of {browseMeta.totalCount} • Page {browseMeta.page + 1}
+          {browseMeta.totalPages ? `/${browseMeta.totalPages}` : ''}
+        </Text>
+      ) : null}
+      {topFacetSummary.map((line) => (
+        <Text key={line} style={styles.metaText}>{line}</Text>
+      ))}
 
       {browseLoading ? <LoadingState /> : null}
-      {!browseLoading && browseError ? <ErrorState message={browseError} /> : null}
+      {!browseLoading && browseError ? <ErrorState message={browseError} onRetry={apply} /> : null}
       {!browseLoading && !browseError && !browseItems.length ? <EmptyState message="No closets found for selected filters." /> : null}
 
       {!browseLoading && !browseError
@@ -62,6 +94,30 @@ export default function BrowseScreen() {
             );
           })
         : null}
+      {!browseLoading && !browseError && browseMeta.totalPages > 1 ? (
+        <View style={styles.row}>
+          <FilterButton
+            label="Prev"
+            active={false}
+            onPress={() => {
+              if (page <= 0) {
+                return;
+              }
+              setPage((previous) => previous - 1);
+            }}
+          />
+          <FilterButton
+            label="Next"
+            active={false}
+            onPress={() => {
+              if (page + 1 >= browseMeta.totalPages) {
+                return;
+              }
+              setPage((previous) => previous + 1);
+            }}
+          />
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -87,6 +143,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   row: { flexDirection: 'row', gap: 8, marginBottom: 10, flexWrap: 'wrap' },
+  metaText: { color: '#afafaf', marginBottom: 4 },
   filterButton: {
     borderColor: '#4eb8ff',
     borderWidth: 1,
