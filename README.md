@@ -32,6 +32,7 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Auth/profile basics (register/login) wired to header actions
 - Token-based auth with access + refresh lifecycle (rotation + logout revocation) and guarded routes
 - Profile editing (display name/password) for authenticated users
+- Outfit planner calendar for authenticated users (create/update/delete plans, calendar visibility, upcoming list)
 - Search + pagination support with relevance ranking, typo tolerance, and faceted counts
 - Personalized recommendations on Home using user activity signals (recently viewed, saved, filter preferences) with graceful fallback
 - Toast feedback + skeleton loading states across core screens
@@ -119,6 +120,12 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 1. User opens closet detail/coats
 2. App stores recently viewed closet IDs locally
 3. Home displays `Continue browsing` cards
+
+### 6) Plan outfits on calendar
+1. Authenticated user opens `Planner`
+2. User creates outfit plans for specific dates
+3. Plans can reference one or more closets and optional clothing items
+4. Planner renders both month calendar indicators and an upcoming plans list
 
 ---
 
@@ -347,6 +354,12 @@ Auth/profile + favorites:
 - `PUT /api/v1/users/{userId}/favorites/{closetId}` → save closet
 - `DELETE /api/v1/users/{userId}/favorites/{closetId}` → remove saved closet
 
+Outfit planner:
+- `GET /api/v1/users/{userId}/outfit-plans` → list outfit plans for user
+- `POST /api/v1/users/{userId}/outfit-plans` → create outfit plan
+- `PUT /api/v1/users/{userId}/outfit-plans/{planId}` → update outfit plan
+- `DELETE /api/v1/users/{userId}/outfit-plans/{planId}` → remove outfit plan
+
 Protected API calls require: `Authorization: Bearer <token>`
 
 ---
@@ -367,13 +380,8 @@ closet/
 
 ## Future Features and Roadmap (User Stories)
 
-> **1) Outfit Planner Calendar**
-> As a logged-in user, I want to plan outfits on a calendar so that I can organize what I will wear ahead of time.
->
-> **Acceptance Criteria**
-> - Users can create, edit, and remove outfit plans for specific dates.
-> - An outfit plan can reference one or more closets and clothing items already saved in the app.
-> - Planned outfits are shown in both calendar view and a simple upcoming list view.
+> **1) Outfit Planner Calendar — ✅ Implemented**
+> As a logged-in user, I can now plan outfits on a calendar and manage upcoming looks.
 
 > **2) Personalized Closet Recommendations**
 > As a user, I want personalized closet recommendations so that I can discover styles that better match my preferences.

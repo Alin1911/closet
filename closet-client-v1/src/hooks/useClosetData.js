@@ -60,6 +60,9 @@ export default function useClosetData() {
   const [browseFacetCounts, setBrowseFacetCounts] = useState({ styles: {}, seasons: {}, colors: {} });
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseError, setBrowseError] = useState('');
+  const [outfitPlans, setOutfitPlans] = useState([]);
+  const [outfitPlansLoading, setOutfitPlansLoading] = useState(false);
+  const [outfitPlansError, setOutfitPlansError] = useState('');
 
   const refreshInFlightRef = useRef(null);
   const browseCacheRef = useRef(new Map());
@@ -303,6 +306,8 @@ export default function useClosetData() {
     updateAuthUser(null);
     setSavedClosets([]);
     setSavedError('');
+    setOutfitPlans([]);
+    setOutfitPlansError('');
     trackEvent('logout');
   }, [authUser?.token, updateAuthUser]);
 
@@ -356,6 +361,59 @@ export default function useClosetData() {
   const retrySavedFetch = useCallback(() => {
     refreshSavedClosets();
   }, [refreshSavedClosets]);
+
+  const refreshOutfitPlans = useCallback(async () => {
+    if (!authUser?.userId) {
+      setOutfitPlans([]);
+      setOutfitPlansError('');
+      return;
+    }
+    setOutfitPlansLoading(true);
+    setOutfitPlansError('');
+    try {
+      const response = await api.get(`/api/v1/users/${authUser.userId}/outfit-plans`);
+      setOutfitPlans(response.data || []);
+    } catch (error) {
+      console.error(error);
+      setOutfitPlansError('Could not load outfit plans.');
+    } finally {
+      setOutfitPlansLoading(false);
+    }
+  }, [authUser?.userId]);
+
+  useEffect(() => {
+    refreshOutfitPlans();
+  }, [refreshOutfitPlans]);
+
+  const createOutfitPlan = useCallback(async (payload) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to plan outfits.');
+    }
+    const response = await api.post(`/api/v1/users/${authUser.userId}/outfit-plans`, payload);
+    await refreshOutfitPlans();
+    trackEvent('outfit_plan_created');
+    return response?.data?.message || 'Outfit plan created.';
+  }, [authUser?.userId, refreshOutfitPlans]);
+
+  const updateOutfitPlan = useCallback(async (planId, payload) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to edit outfit plans.');
+    }
+    const response = await api.put(`/api/v1/users/${authUser.userId}/outfit-plans/${planId}`, payload);
+    await refreshOutfitPlans();
+    trackEvent('outfit_plan_updated');
+    return response?.data?.message || 'Outfit plan updated.';
+  }, [authUser?.userId, refreshOutfitPlans]);
+
+  const deleteOutfitPlan = useCallback(async (planId) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to remove outfit plans.');
+    }
+    const response = await api.delete(`/api/v1/users/${authUser.userId}/outfit-plans/${planId}`);
+    await refreshOutfitPlans();
+    trackEvent('outfit_plan_deleted');
+    return response?.data?.message || 'Outfit plan deleted.';
+  }, [authUser?.userId, refreshOutfitPlans]);
 
   const recentlyViewedClosets = useMemo(() => recentlyViewedIds
     .map((id) => closets.find((item) => item.id === id))
@@ -434,6 +492,13 @@ export default function useClosetData() {
     onBrowseFilterChange,
     resetBrowseFilters,
     retryBrowseFetch,
-    retrySavedFetch
+    retrySavedFetch,
+    outfitPlans,
+    outfitPlansLoading,
+    outfitPlansError,
+    refreshOutfitPlans,
+    createOutfitPlan,
+    updateOutfitPlan,
+    deleteOutfitPlan
   };
 }
