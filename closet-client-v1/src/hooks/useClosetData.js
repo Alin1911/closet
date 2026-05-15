@@ -13,6 +13,7 @@ const DEFAULT_BROWSE_FILTERS = {
 };
 
 const RECOMMENDATION_LIMIT = 6;
+const MIN_RECENT_WEIGHT = 0;
 const MAX_RECENT_WEIGHT = 8;
 const FAVORITE_WEIGHT = 80;
 const RECENT_VIEW_MULTIPLIER = 10;
@@ -365,7 +366,7 @@ export default function useClosetData() {
       return [];
     }
     const favoriteIds = new Set(authUser?.favoriteClosetIds || []);
-    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(0, MAX_RECENT_WEIGHT - index)]));
+    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(MIN_RECENT_WEIGHT, MAX_RECENT_WEIGHT - index)]));
     const score = (item) => {
       let total = 0;
       if (favoriteIds.has(item.id)) {

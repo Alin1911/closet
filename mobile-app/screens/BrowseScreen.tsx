@@ -60,7 +60,7 @@ export default function BrowseScreen() {
       <View style={styles.row}>
         <FilterButton label="Newest" active={sort === 'newest'} onPress={() => setSort('newest')} />
         <FilterButton label="Name" active={sort === 'name'} onPress={() => setSort('name')} />
-        <FilterButton label="Search" active onPress={applyFromStart} />
+        <FilterButton label="Apply filters" active onPress={applyFromStart} />
       </View>
       {!browseLoading && !browseError ? (
         <Text style={styles.metaText}>

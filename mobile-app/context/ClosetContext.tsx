@@ -23,6 +23,7 @@ const AUTH_KEY = 'closetMobileAuthUser';
 const RECENT_KEY = 'closetMobileRecentlyViewed';
 const PREF_KEY = 'closetMobileBrowsePreferences';
 const RECOMMENDATION_LIMIT = 6;
+const MIN_RECENT_WEIGHT = 0;
 const MAX_RECENT_WEIGHT = 8;
 const FAVORITE_WEIGHT = 80;
 const RECENT_VIEW_MULTIPLIER = 10;
@@ -386,7 +387,7 @@ export const ClosetProvider = ({ children }: { children: React.ReactNode }) => {
       return [];
     }
     const favoriteIds = new Set(authUser?.favoriteClosetIds || []);
-    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(0, MAX_RECENT_WEIGHT - index)]));
+    const recentWeights = new Map(recentlyViewedIds.map((id, index) => [id, Math.max(MIN_RECENT_WEIGHT, MAX_RECENT_WEIGHT - index)]));
     const score = (item: Closet) => {
       let total = 0;
       if (favoriteIds.has(item.id)) {
