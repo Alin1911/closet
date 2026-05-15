@@ -26,8 +26,8 @@ describe('Planner', () => {
 
   it('renders upcoming empty state', () => {
     render(<Planner {...baseProps} />);
-    expect(screen.getByText('Outfit planner')).toBeInTheDocument();
-    expect(screen.getByText('No upcoming outfits yet.')).toBeInTheDocument();
+    expect(screen.getByText('Outfit planner')).toBeTruthy();
+    expect(screen.getByText('No upcoming outfits yet.')).toBeTruthy();
   });
 
   it('creates a plan using selected closet', async () => {
