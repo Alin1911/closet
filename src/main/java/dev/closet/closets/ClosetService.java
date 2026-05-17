@@ -2,6 +2,7 @@ package dev.closet.closets;
 
 
 import io.micrometer.core.instrument.Tags;
+import jakarta.annotation.PostConstruct;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,8 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class ClosetService {
     private static final long BROWSE_CACHE_TTL_SECONDS = 120;
+    private static final int BROWSE_CACHE_MAX_ENTRIES = 200;
 
     @Autowired
     private ClosetRepository closetRepository;
@@ -32,8 +34,27 @@ public class ClosetService {
     @Autowired(required = false)
     private io.micrometer.core.instrument.MeterRegistry meterRegistry;
 
-    private final Map<String, CacheEntry<List<Closet>>> closetListCache = new ConcurrentHashMap<>();
-    private final Map<String, CacheEntry<ClosetPageResponse>> closetPageCache = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry<List<Closet>>> closetListCache = Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, CacheEntry<List<Closet>>> eldest) {
+            return size() > BROWSE_CACHE_MAX_ENTRIES;
+        }
+    });
+    private final Map<String, CacheEntry<ClosetPageResponse>> closetPageCache = Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, CacheEntry<ClosetPageResponse>> eldest) {
+            return size() > BROWSE_CACHE_MAX_ENTRIES;
+        }
+    });
+
+    @PostConstruct
+    void registerCacheGauges() {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "list"), closetListCache, Map::size);
+        meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "page"), closetPageCache, Map::size);
+    }
 
     public List<Closet> allClosets(String style, String season, String color, String sort){
         String cacheKey = cacheKey(style, season, color, sort, null, null, null);
@@ -287,8 +308,6 @@ public class ClosetService {
         }
         Tags tags = Tags.of("mode", mode, "result", result);
         meterRegistry.counter("closet.browse.cache.requests", tags).increment();
-        meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "list"), closetListCache, Map::size);
-        meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "page"), closetPageCache, Map::size);
     }
 
     private record CacheEntry<T>(T value, Instant expiresAt) {

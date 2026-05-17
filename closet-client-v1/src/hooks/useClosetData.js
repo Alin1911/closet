@@ -14,7 +14,7 @@ const DEFAULT_BROWSE_FILTERS = {
 
 const RECOMMENDATION_LIMIT = 6;
 const BROWSE_CACHE_LIMIT = 30;
-const BROWSE_CACHE_TTL_MS = 5 * 60 * 1000;
+const BROWSE_CACHE_TTL_MS = 2 * 60 * 1000;
 const MIN_RECENT_WEIGHT = 0;
 const MAX_RECENT_WEIGHT = 8;
 const FAVORITE_WEIGHT = 80;
@@ -133,6 +133,8 @@ export default function useClosetData() {
     if (!force && browseCacheRef.current.has(key)) {
       const cached = browseCacheRef.current.get(key);
       if (Date.now() - (cached.cachedAt || 0) < BROWSE_CACHE_TTL_MS) {
+        browseCacheRef.current.delete(key);
+        browseCacheRef.current.set(key, { ...cached, cachedAt: Date.now() });
         setBrowseItems(cached.items);
         setBrowseTotalPages(cached.totalPages);
         setBrowseTotalCount(cached.totalCount);
