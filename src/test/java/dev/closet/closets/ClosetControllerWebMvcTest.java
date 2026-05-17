@@ -46,10 +46,11 @@ class ClosetControllerWebMvcTest {
                 2,
                 Map.of("Classic", 7L),
                 Map.of("Winter", 6L),
-                Map.of("Blue", 4L)
+                Map.of("Blue", 4L),
+                Map.of("minimal", 3L)
         );
 
-        when(closetService.allClosetsPage(null, null, null, null, "winter", 1, 5)).thenReturn(response);
+        when(closetService.allClosetsPage(null, null, null, null, null, "winter", 1, 5)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/closets")
                         .queryParam("q", "winter")
@@ -62,6 +63,7 @@ class ClosetControllerWebMvcTest {
                 .andExpect(header().string("X-Page", "1"))
                 .andExpect(header().string("X-Size", "5"))
                 .andExpect(header().string("X-Facet-Styles", "{\"Classic\":7}"))
+                .andExpect(header().string("X-Facet-Tags", "{\"minimal\":3}"))
                 .andExpect(jsonPath("$[0].name").value("Winter Closet"));
     }
 

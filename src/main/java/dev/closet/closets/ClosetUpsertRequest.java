@@ -15,6 +15,7 @@ public record ClosetUpsertRequest(
         String poster,
         String trailerLink,
         List<String> images,
+        List<String> tags,
         String style,
         String season,
         String color

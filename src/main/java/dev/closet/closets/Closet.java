@@ -32,6 +32,7 @@ public class Closet {
     private String description;
     private String trailerLink;
     private List<String> images;
+    private List<String> tags;
     private String style;
     private String season;
     private String color;

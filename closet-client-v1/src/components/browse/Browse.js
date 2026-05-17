@@ -14,12 +14,16 @@ export default function Browse({ filters, items, totalPages, totalCount, facetCo
       if (keys.length) {
         return keys;
       }
+      if (fallbackField === 'tags') {
+        return [...new Set(items.flatMap((c) => c?.tags || []).filter(Boolean))];
+      }
       return [...new Set(items.map((c) => c?.[fallbackField]).filter(Boolean))];
     };
     return {
       styles: toOptionList(facetCounts.styles, 'style'),
       seasons: toOptionList(facetCounts.seasons, 'season'),
-      colors: toOptionList(facetCounts.colors, 'color')
+      colors: toOptionList(facetCounts.colors, 'color'),
+      tags: toOptionList(facetCounts.tags, 'tags')
     };
   }, [items, facetCounts]);
 
@@ -70,10 +74,10 @@ export default function Browse({ filters, items, totalPages, totalCount, facetCo
   return (
     <Container className="py-4">
       <h2 tabIndex={-1} ref={headingRef}>Browse closets</h2>
-      <p className="text-secondary">Search, filter by style/season/color, and sort by newest or name.</p>
+      <p className="text-secondary">Search, filter by style/season/color/tag, and sort by newest or name.</p>
       {favoriteError ? <p className="text-danger" aria-live="assertive">{favoriteError}</p> : null}
       <Row className="mb-3 g-2">
-        <Col md={3}>
+        <Col md={2}>
           <Form.Control
             aria-label="Search closets"
             placeholder="Search closets..."
@@ -99,7 +103,7 @@ export default function Browse({ filters, items, totalPages, totalCount, facetCo
             {options.colors.map((value) => <option key={value} value={value}>{value} ({facetCounts.colors?.[value] || 0})</option>)}
           </Form.Select>
         </Col>
-        <Col md={2}>
+        <Col md={1}>
           <Form.Select aria-label="Sort closets" value={filters.sort} onChange={(e) => onFilterChange('sort', e.target.value)}>
             <option value="newest">Newest</option>
             <option value="name">Name</option>
@@ -107,6 +111,12 @@ export default function Browse({ filters, items, totalPages, totalCount, facetCo
         </Col>
         <Col md={1}>
           <Button variant="outline-light" className="w-100" onClick={onResetFilters}>Reset</Button>
+        </Col>
+        <Col md={2}>
+          <Form.Select aria-label="Filter by tag" value={filters.tag} onChange={(e) => onFilterChange('tag', e.target.value)}>
+            <option value="">All tags</option>
+            {options.tags.map((value) => <option key={value} value={value}>{value} ({facetCounts.tags?.[value] || 0})</option>)}
+          </Form.Select>
         </Col>
       </Row>
 

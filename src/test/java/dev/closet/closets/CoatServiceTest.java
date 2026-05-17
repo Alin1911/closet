@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,9 @@ class CoatServiceTest {
     @Mock
     private ClosetRepository closetRepository;
 
+    @Mock
+    private TagSuggestionService tagSuggestionService;
+
     @InjectMocks
     private CoatService coatService;
 
@@ -36,7 +40,7 @@ class CoatServiceTest {
         ObjectId closetId = new ObjectId();
         when(closetRepository.findById(closetId)).thenReturn(Optional.empty());
 
-        Optional<Coat> response = coatService.createCoat(closetId, new CoatCreateRequest(null, "Note", "Description", List.of()));
+        Optional<Coat> response = coatService.createCoat(closetId, new CoatCreateRequest(null, "Note", "Description", List.of(), List.of()));
 
         assertTrue(response.isEmpty());
         verify(coatRepository, never()).insert(any(Coat.class));
@@ -44,6 +48,7 @@ class CoatServiceTest {
 
     @Test
     void createCoat_shouldPersistAndAttachToCloset() {
+        when(tagSuggestionService.normalizeTags(anyList())).thenReturn(List.of("winter"));
         ObjectId closetId = new ObjectId();
         ObjectId coatId = new ObjectId();
         Closet closet = new Closet();
@@ -56,7 +61,7 @@ class CoatServiceTest {
             return coat;
         });
 
-        Optional<Coat> response = coatService.createCoat(closetId, new CoatCreateRequest(null, "Note", "Description", List.of("image.png")));
+        Optional<Coat> response = coatService.createCoat(closetId, new CoatCreateRequest(null, "Note", "Description", List.of("image.png"), List.of("winter")));
 
         assertTrue(response.isPresent());
         assertEquals(coatId, response.get().getId());
@@ -83,7 +88,7 @@ class CoatServiceTest {
         when(closetRepository.findById(closetId)).thenReturn(Optional.of(closet));
         when(coatRepository.findById(requestedCoatId)).thenReturn(Optional.of(existing));
 
-        Optional<Coat> response = coatService.updateCoat(closetId, requestedCoatId, new CoatUpdateRequest("Updated", "Updated desc", List.of()));
+        Optional<Coat> response = coatService.updateCoat(closetId, requestedCoatId, new CoatUpdateRequest("Updated", "Updated desc", List.of(), List.of()));
 
         assertTrue(response.isEmpty());
         verify(coatRepository, never()).save(any(Coat.class));

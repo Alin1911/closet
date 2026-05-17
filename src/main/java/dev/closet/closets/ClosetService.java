@@ -31,6 +31,9 @@ public class ClosetService {
     @Autowired
     private CoatRepository coatRepository;
 
+    @Autowired
+    private TagSuggestionService tagSuggestionService;
+
     @Autowired(required = false)
     private io.micrometer.core.instrument.MeterRegistry meterRegistry;
 
@@ -56,23 +59,23 @@ public class ClosetService {
         meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "page"), closetPageCache, Map::size);
     }
 
-    public List<Closet> allClosets(String style, String season, String color, String sort){
-        String cacheKey = cacheKey(style, season, color, sort, null, null, null);
+    public List<Closet> allClosets(String style, String season, String color, String tag, String sort){
+        String cacheKey = cacheKey(style, season, color, tag, sort, null, null, null);
         CacheEntry<List<Closet>> cached = closetListCache.get(cacheKey);
         if (cached != null && !cached.expired()) {
             recordCacheMetrics("list", "hit");
             recordBrowseMetrics("list", false, cached.value().size());
             return cached.value();
         }
-        List<Closet> closets = filterAndSort(style, season, color, sort, null);
+        List<Closet> closets = filterAndSort(style, season, color, tag, sort, null);
         closetListCache.put(cacheKey, new CacheEntry<>(closets, Instant.now().plusSeconds(BROWSE_CACHE_TTL_SECONDS)));
         recordCacheMetrics("list", "miss");
         recordBrowseMetrics("list", false, closets.size());
         return closets;
     }
 
-    public ClosetPageResponse allClosetsPage(String style, String season, String color, String sort, String query, int page, int size) {
-        String cacheKey = cacheKey(style, season, color, sort, query, page, size);
+    public ClosetPageResponse allClosetsPage(String style, String season, String color, String tag, String sort, String query, int page, int size) {
+        String cacheKey = cacheKey(style, season, color, tag, sort, query, page, size);
         CacheEntry<ClosetPageResponse> cached = closetPageCache.get(cacheKey);
         if (cached != null && !cached.expired()) {
             recordCacheMetrics("page", "hit");
@@ -80,10 +83,11 @@ public class ClosetService {
             return cached.value();
         }
         boolean hasQuery = query != null && !query.isBlank();
-        List<Closet> filtered = filterAndSort(style, season, color, sort, query);
+        List<Closet> filtered = filterAndSort(style, season, color, tag, sort, query);
         Map<String, Long> styleCounts = buildFacetCounts(filtered, Closet::getStyle);
         Map<String, Long> seasonCounts = buildFacetCounts(filtered, Closet::getSeason);
         Map<String, Long> colorCounts = buildFacetCounts(filtered, Closet::getColor);
+        Map<String, Long> tagCounts = buildTagFacetCounts(filtered);
         if (size <= 0) {
             size = 12;
         }
@@ -93,18 +97,19 @@ public class ClosetService {
         int start = Math.min(page * size, filtered.size());
         int end = Math.min(start + size, filtered.size());
         int totalPages = filtered.isEmpty() ? 0 : (int) Math.ceil((double) filtered.size() / size);
-        ClosetPageResponse response = new ClosetPageResponse(filtered.subList(start, end), filtered.size(), page, size, totalPages, styleCounts, seasonCounts, colorCounts);
+        ClosetPageResponse response = new ClosetPageResponse(filtered.subList(start, end), filtered.size(), page, size, totalPages, styleCounts, seasonCounts, colorCounts, tagCounts);
         closetPageCache.put(cacheKey, new CacheEntry<>(response, Instant.now().plusSeconds(BROWSE_CACHE_TTL_SECONDS)));
         recordCacheMetrics("page", "miss");
         recordBrowseMetrics("page", hasQuery, filtered.size());
         return response;
     }
 
-    private List<Closet> filterAndSort(String style, String season, String color, String sort, String query) {
+    private List<Closet> filterAndSort(String style, String season, String color, String tag, String sort, String query) {
         List<Closet> closets = closetRepository.findAll();
         String styleFilter = normalize(style);
         String seasonFilter = normalize(season);
         String colorFilter = normalize(color);
+        String tagFilter = normalize(tag);
         String normalizedQuery = normalize(query);
         Map<ObjectId, Integer> relevanceScores = new LinkedHashMap<>();
 
@@ -112,6 +117,7 @@ public class ClosetService {
                 .filter(closet -> styleFilter == null || styleFilter.equals(normalize(closet.getStyle())))
                 .filter(closet -> seasonFilter == null || seasonFilter.equals(normalize(closet.getSeason())))
                 .filter(closet -> colorFilter == null || colorFilter.equals(normalize(closet.getColor())))
+                .filter(closet -> tagFilter == null || closetTags(closet).stream().map(this::normalize).anyMatch(tagValue -> tagFilter.equals(tagValue)))
                 .filter(closet -> {
                     if (normalizedQuery == null) {
                         return true;
@@ -153,6 +159,7 @@ public class ClosetService {
         closet.setPoster(payload.poster());
         closet.setTrailerLink(payload.trailerLink());
         closet.setImages(payload.images() == null ? List.of() : payload.images());
+        closet.setTags(resolveTags(payload.tags(), payload.name(), payload.description(), payload.images()));
         closet.setStyle(payload.style());
         closet.setSeason(payload.season());
         closet.setColor(payload.color());
@@ -176,6 +183,7 @@ public class ClosetService {
         closet.setPoster(payload.poster());
         closet.setTrailerLink(payload.trailerLink());
         closet.setImages(payload.images() == null ? List.of() : payload.images());
+        closet.setTags(resolveTags(payload.tags(), payload.name(), payload.description(), payload.images()));
         closet.setStyle(payload.style());
         closet.setSeason(payload.season());
         closet.setColor(payload.color());
@@ -200,11 +208,12 @@ public class ClosetService {
         return true;
     }
 
-    private String cacheKey(String style, String season, String color, String sort, String query, Integer page, Integer size) {
+    private String cacheKey(String style, String season, String color, String tag, String sort, String query, Integer page, Integer size) {
         return String.join("|",
                 normalize(style) == null ? "-" : normalize(style),
                 normalize(season) == null ? "-" : normalize(season),
                 normalize(color) == null ? "-" : normalize(color),
+                normalize(tag) == null ? "-" : normalize(tag),
                 normalize(sort) == null ? "-" : normalize(sort),
                 normalize(query) == null ? "-" : normalize(query),
                 page == null ? "-" : String.valueOf(page),
@@ -231,6 +240,7 @@ public class ClosetService {
         String style = normalize(closet.getStyle());
         String season = normalize(closet.getSeason());
         String color = normalize(closet.getColor());
+        String tags = String.join(" ", closetTags(closet));
 
         int score = 0;
         if (name != null && name.equals(query)) {
@@ -240,6 +250,9 @@ public class ClosetService {
         }
         if (description != null && description.contains(query)) {
             score += 25;
+        }
+        if (tags != null && tags.contains(query)) {
+            score += 20;
         }
         if (query.equals(style) || query.equals(season) || query.equals(color)) {
             score += 40;
@@ -289,6 +302,41 @@ public class ClosetService {
                 .map(fieldAccessor)
                 .filter(value -> value != null && !value.isBlank())
                 .collect(Collectors.groupingBy(String::trim, LinkedHashMap::new, Collectors.counting()));
+    }
+
+    private Map<String, Long> buildTagFacetCounts(List<Closet> closets) {
+        return closets.stream()
+                .flatMap(closet -> closetTags(closet).stream())
+                .filter(value -> value != null && !value.isBlank())
+                .collect(Collectors.groupingBy(String::trim, LinkedHashMap::new, Collectors.counting()));
+    }
+
+    private List<String> closetTags(Closet closet) {
+        if (closet.getTags() != null && !closet.getTags().isEmpty()) {
+            return closet.getTags();
+        }
+        List<String> suggested = tagSuggestionService.suggest(List.of(closet.getStyle(), closet.getSeason(), closet.getColor(), closet.getName()));
+        return suggested == null ? List.of() : suggested;
+    }
+
+    private List<String> resolveTags(List<String> payloadTags, String name, String description, List<String> images) {
+        List<String> normalized = tagSuggestionService.normalizeTags(payloadTags);
+        if (normalized == null) {
+            normalized = List.of();
+        }
+        if (!normalized.isEmpty()) {
+            return normalized;
+        }
+        List<String> imageTokens = images == null ? List.of() : images.stream().map(this::extractFileName).toList();
+        return tagSuggestionService.suggest(List.of(name, description, String.join(" ", imageTokens)));
+    }
+
+    private String extractFileName(String value) {
+        if (value == null) {
+            return "";
+        }
+        int index = value.lastIndexOf('/');
+        return index >= 0 ? value.substring(index + 1) : value;
     }
 
     private void recordBrowseMetrics(String mode, boolean hasQuery, int resultCount) {

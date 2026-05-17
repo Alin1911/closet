@@ -11,6 +11,7 @@ public record ClosetPageResponse(
         int totalPages,
         Map<String, Long> styleCounts,
         Map<String, Long> seasonCounts,
-        Map<String, Long> colorCounts
+        Map<String, Long> colorCounts,
+        Map<String, Long> tagCounts
 ) {
 }

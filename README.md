@@ -34,6 +34,8 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Profile editing (display name/password) for authenticated users
 - Outfit planner calendar for authenticated users (create/update/delete plans, calendar visibility, upcoming list)
 - Search + pagination support with relevance ranking, typo tolerance, and faceted counts
+- Image upload API with file-type/size validation and auto-tag suggestions
+- Tag-aware closet discovery (`tag` query filter + tag facets in browse metadata)
 - Personalized recommendations on Home using user activity signals (recently viewed, saved, filter preferences) with graceful fallback
 - Advanced search alerts with saved filters, user-managed in-app/email preferences, and match acknowledgment
 - Toast feedback + skeleton loading states across core screens
@@ -152,6 +154,8 @@ Next UX opportunities:
 - ✅ Basic analytics event hooks for key UX actions
 - ✅ Security maturity baseline (refresh-token rotation + logout revocation + stricter route policy)
 - ✅ Search relevance baseline (weighted ranking + typo tolerance + faceted counts)
+- ✅ Image upload with auto-tagging for closet item notes (validated upload + editable tags)
+- ✅ Tag-based browse discovery and recommendation signal expansion
 - ✅ Broader automated test coverage baseline (backend service + frontend interaction tests)
 - ✅ Expanded auth/session test coverage (service + controller) and frontend profile interaction tests
 - ✅ Request-correlation logging baseline (`X-Request-Id` + structured request logs)
@@ -252,6 +256,10 @@ MONGO_PASSWORD=your_password
 MONGO_CLUSTER=your_cluster
 ```
 
+Optional upload config (`application.properties`):
+- `app.upload.base-dir` defaults to `uploads` (auto-created on first upload)
+- Ensure the running service user can write to this directory
+
 Run backend:
 ```bash
 ./mvnw spring-boot:run
@@ -333,7 +341,7 @@ CI=true npm run test:e2e
 ## API Snapshot
 
 Closets:
-- `GET /api/v1/closets` → list closets (`style`, `season`, `color`, `sort`, `q`, `page`, `size` query params supported)
+- `GET /api/v1/closets` → list closets (`style`, `season`, `color`, `tag`, `sort`, `q`, `page`, `size` query params supported)
 - `GET /api/v1/closets/{id}` → get single closet
 - `GET /api/v1/closets/imdb/{imdbId}` → legacy get-by-id route kept for compatibility
 - `POST /api/v1/closets` → create closet
@@ -341,10 +349,14 @@ Closets:
 - `DELETE /api/v1/closets/{id}` → delete closet
 
 Coat notes:
-- `GET /api/v1/closets/{closetId}/coats` → list coat notes for closet
-- `POST /api/v1/closets/{closetId}/coats` → create coat note
-- `PUT /api/v1/closets/{closetId}/coats/{coatId}` → update coat note
+- `GET /api/v1/closets/{closetId}/coats` → list coat notes for closet (including `images` and `tags`)
+- `POST /api/v1/closets/{closetId}/coats` → create coat note (supports `images` and optional editable `tags`)
+- `PUT /api/v1/closets/{closetId}/coats/{coatId}` → update coat note (supports `images` and `tags`)
 - `DELETE /api/v1/closets/{closetId}/coats/{coatId}` → delete coat note
+
+Uploads:
+- `POST /api/v1/uploads/images` → upload image (`multipart/form-data`, key: `file`, max 5MB, jpeg/png/webp/gif) and receive URL + suggested tags
+- `GET /api/v1/uploads/images/{filename}` → retrieve uploaded image
 
 Auth/profile + favorites:
 - `POST /api/v1/auth/register` → register user
@@ -398,13 +410,13 @@ closet/
 > - The home screen displays a dedicated “Recommended for you” section.
 > - Recommendations degrade gracefully to popular closets for new users with limited activity.
 
-> **3) Image Upload with Auto-Tagging**
-> As a user, I want to upload closet and coat images with suggested tags so that organizing my wardrobe is faster.
+> **3) Image Upload with Auto-Tagging — ✅ Implemented**
+> As a user, I can upload closet/coat images with suggested tags so that organizing wardrobe notes is faster.
 >
 > **Acceptance Criteria**
-> - Users can upload images during closet/clothing-item create and update flows.
-> - The system suggests tags (e.g., color, season, style) that users can accept or edit.
-> - Uploaded assets are validated for type/size and stored with associated closet/coat records.
+> - ✅ Users can upload images during clothing-item create and update flows.
+> - ✅ The system suggests tags (e.g., color, season, style) that users can accept or edit.
+> - ✅ Uploaded assets are validated for type/size and stored with associated clothing-item records.
 
 > **4) Advanced Search Alerts**
 > As a user, I want to save searches and receive alerts for new matching closets so that I do not miss relevant additions.
@@ -501,3 +513,21 @@ closet/
 > - The dashboard shows usage metrics (wear frequency, color distribution, category balance).
 > - The dashboard highlights underused items and recommends actionable next looks.
 > - Users can view trends over weekly, monthly, and seasonal intervals.
+
+> **16) Tag-Based Discovery Loop — ✅ Implemented**
+> As a user, I want tag-focused browsing so I can quickly find closets matching specific aesthetics and keep discovery relevant.
+>
+> **Acceptance Criteria**
+> - ✅ Browse supports filtering by `tag` in addition to style/season/color/search.
+> - ✅ Browse metadata exposes tag facets so UI filters stay data-driven.
+> - ✅ Recommendation scoring now incorporates historical tag preferences.
+
+---
+
+## Recent Implementation Summary
+
+- Added production-ready image upload endpoint with strict file validation and persisted asset serving.
+- Added auto-tag suggestion + normalized editable tags for coat-note create/update flows.
+- Extended browse/search stack with tag filtering and tag facet headers.
+- Integrated web UX for note-image upload, preview, editable tags, and improved item detail rendering.
+- Expanded automated coverage with upload controller tests and updated existing backend/frontend tests.

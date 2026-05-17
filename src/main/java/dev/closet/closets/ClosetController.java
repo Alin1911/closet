@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/closets")
-@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = {"X-Total-Count", "X-Total-Pages", "X-Page", "X-Size", "X-Facet-Styles", "X-Facet-Seasons", "X-Facet-Colors"})
+@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = {"X-Total-Count", "X-Total-Pages", "X-Page", "X-Size", "X-Facet-Styles", "X-Facet-Seasons", "X-Facet-Colors", "X-Facet-Tags"})
 public class ClosetController {
     @Autowired
     private ClosetService closetService;
@@ -28,6 +28,7 @@ public class ClosetController {
             @RequestParam(required = false) String style,
             @RequestParam(required = false) String season,
             @RequestParam(required = false) String color,
+            @RequestParam(required = false) String tag,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false, name = "q") String query,
             @RequestParam(required = false) Integer page,
@@ -40,7 +41,7 @@ public class ClosetController {
             if (size != null && size <= 0) {
                 return new ResponseEntity<>(List.of(), HttpStatus.BAD_REQUEST);
             }
-            ClosetPageResponse response = closetService.allClosetsPage(style, season, color, sort, query, page == null ? 0 : page, size == null ? 12 : size);
+            ClosetPageResponse response = closetService.allClosetsPage(style, season, color, tag, sort, query, page == null ? 0 : page, size == null ? 12 : size);
             HttpHeaders headers = new HttpHeaders();
             headers.add("X-Total-Count", String.valueOf(response.totalCount()));
             headers.add("X-Total-Pages", String.valueOf(response.totalPages()));
@@ -49,9 +50,10 @@ public class ClosetController {
             headers.add("X-Facet-Styles", toJson(response.styleCounts()));
             headers.add("X-Facet-Seasons", toJson(response.seasonCounts()));
             headers.add("X-Facet-Colors", toJson(response.colorCounts()));
+            headers.add("X-Facet-Tags", toJson(response.tagCounts()));
             return new ResponseEntity<>(response.items(), headers, HttpStatus.OK);
         }
-        return new ResponseEntity<>(closetService.allClosets(style, season, color, sort), HttpStatus.OK);
+        return new ResponseEntity<>(closetService.allClosets(style, season, color, tag, sort), HttpStatus.OK);
     }
 
     @GetMapping("/imdb/{imdbId}")

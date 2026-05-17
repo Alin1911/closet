@@ -13,6 +13,7 @@ public record CoatCreateRequest(
         @NotBlank(message = "Description is required.")
         @Size(max = 1000, message = "Description must be at most 1000 characters.")
         String description,
-        List<String> images
+        List<String> images,
+        List<String> tags
 ) {
 }

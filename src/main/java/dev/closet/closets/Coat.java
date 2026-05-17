@@ -18,14 +18,16 @@ public class Coat {
     @Id
     public ObjectId id;
     private List<String> images;
+    private List<String> tags;
     private String name;
     private String description;
     private Instant createdAt;
     private Instant updatedAt;
 
-    public Coat(String name, String description, List<String> images) {
+    public Coat(String name, String description, List<String> images, List<String> tags) {
         this.name = name;
         this.description = description;
         this.images = images;
+        this.tags = tags;
     }
 }

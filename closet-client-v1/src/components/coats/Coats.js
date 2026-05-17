@@ -15,6 +15,10 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingCoatId, setEditingCoatId] = useState('');
     const [editingText, setEditingText] = useState('');
+    const [draftImages, setDraftImages] = useState([]);
+    const [draftTags, setDraftTags] = useState([]);
+    const [uploadInProgress, setUploadInProgress] = useState(false);
+    const [editingTags, setEditingTags] = useState([]);
     const [editError, setEditError] = useState('');
     const navigate = useNavigate();
     let params = useParams();
@@ -40,12 +44,15 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
             const response = await api.post(`/api/v1/closets/${closetId}/coats`, {
               name: "Closet note",
               description: coatDescription,
-              images: []
+              images: draftImages,
+              tags: draftTags
             });
 
             const created = response?.data?.data || {name: "Closet note", description: coatDescription};
             const updatedCoats = [...coats, created];
             coat.value = "";
+            setDraftImages([]);
+            setDraftTags([]);
             setCoats(updatedCoats);
             onNotify?.(response?.data?.message || 'Item note created.');
           } catch (error) {
@@ -60,11 +67,13 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
       setEditError('');
       setEditingCoatId(coat.id);
       setEditingText(coat.description || coat.body || '');
+      setEditingTags(coat.tags || []);
     };
 
     const cancelEdit = () => {
       setEditingCoatId('');
       setEditingText('');
+      setEditingTags([]);
       setEditError('');
     };
 
@@ -77,7 +86,8 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
         const response = await api.put(`/api/v1/closets/${closetId}/coats/${coat.id}`, {
           name: coat.name || 'Closet note',
           description: editingText.trim(),
-          images: coat.images || []
+          images: coat.images || [],
+          tags: editingTags
         });
         const updated = response?.data?.data;
         setCoats(coats.map((item) => item.id === coat.id ? updated : item));
@@ -86,6 +96,54 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
       } catch (err) {
         console.error(err);
         setEditError('Could not update this note.');
+      }
+    };
+
+    const parseTags = (value) => value
+      .split(',')
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+      .filter((item, index, values) => values.indexOf(item) === index);
+
+    const onDraftTagsChange = (value) => {
+      setDraftTags(parseTags(value));
+    };
+
+    const onEditingTagsChange = (value) => {
+      setEditingTags(parseTags(value));
+    };
+
+    const uploadImage = async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setSubmitError('Image exceeds the 5MB limit.');
+        event.target.value = '';
+        return;
+      }
+      setSubmitError('');
+      setUploadInProgress(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('/api/v1/uploads/images', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        const payload = response?.data?.data;
+        if (payload?.url) {
+          setDraftImages((previous) => [...previous, payload.url]);
+        }
+        if (payload?.suggestedTags?.length) {
+          setDraftTags((previous) => [...new Set([...previous, ...payload.suggestedTags])]);
+        }
+      } catch (uploadError) {
+        console.error(uploadError);
+        setSubmitError(uploadError?.response?.data?.message || 'Could not upload image.');
+      } finally {
+        setUploadInProgress(false);
+        event.target.value = '';
       }
     };
 
@@ -132,7 +190,18 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
             <>
             <Row>
               <Col>
-                <CoatForm handleSubmit={addCoat} coatText={coatText} labelText="Add item note" defaultValue="" isSubmitting={isSubmitting} />
+                <CoatForm
+                  handleSubmit={addCoat}
+                  coatText={coatText}
+                  labelText="Add item note"
+                  defaultValue=""
+                  isSubmitting={isSubmitting}
+                  onUploadImage={uploadImage}
+                  uploadInProgress={uploadInProgress}
+                  images={draftImages}
+                  tags={draftTags}
+                  onTagChange={onDraftTagsChange}
+                />
                 {submitError ? <p className="text-danger mt-2" aria-live="assertive">{submitError}</p> : null}
                 {editError ? <p className="text-danger mt-2" aria-live="assertive">{editError}</p> : null}
               </Col>
@@ -150,16 +219,25 @@ export const Coats = ({getClosetData,closet, coats, setCoats, loading, error, on
                     <Col>
                       {editingCoatId === coat.id ? (
                         <>
-                          <Form.Control as="textarea" rows={3} value={editingText} onChange={(e) => setEditingText(e.target.value)} />
-                          <div className="d-flex gap-2 mt-2">
-                            <Button variant="info" onClick={() => saveEdit(coat)}>Save</Button>
-                            <Button variant="outline-light" onClick={cancelEdit}>Cancel</Button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <p>{coat.description || coat.body}</p>
-                          <div className="d-flex gap-2">
+                           <Form.Control as="textarea" rows={3} value={editingText} onChange={(e) => setEditingText(e.target.value)} />
+                           <Form.Control className="mt-2" value={editingTags.join(', ')} placeholder="tag1, tag2" onChange={(e) => onEditingTagsChange(e.target.value)} />
+                           <div className="d-flex gap-2 mt-2">
+                             <Button variant="info" onClick={() => saveEdit(coat)}>Save</Button>
+                             <Button variant="outline-light" onClick={cancelEdit}>Cancel</Button>
+                           </div>
+                         </>
+                       ) : (
+                         <>
+                           <p>{coat.description || coat.body}</p>
+                           {coat.tags?.length ? <p className="text-secondary small mb-2">Tags: {coat.tags.join(', ')}</p> : null}
+                           {coat.images?.length ? (
+                             <div className="d-flex flex-wrap gap-2 mb-2">
+                               {coat.images.map((image) => (
+                                 <img key={image} src={image} alt={coat.name || 'Item note'} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6 }} />
+                               ))}
+                             </div>
+                           ) : null}
+                           <div className="d-flex gap-2">
                             <Button size="sm" variant="outline-info" onClick={() => startEdit(coat)}>Edit</Button>
                             <Button size="sm" variant="outline-danger" onClick={() => deleteCoat(coat.id)}>Delete</Button>
                           </div>

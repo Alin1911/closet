@@ -10,11 +10,11 @@ describe('Browse', () => {
     render(
       <MemoryRouter>
         <Browse
-          filters={{ style: '', season: '', color: '', sort: 'newest', q: '', page: 0, size: 12 }}
+          filters={{ style: '', season: '', color: '', tag: '', sort: 'newest', q: '', page: 0, size: 12 }}
           items={[{ id: '1', name: 'Winter Closet', description: 'desc', poster: '', images: [], trailerLink: '' }]}
           totalPages={5}
           totalCount={12}
-          facetCounts={{ styles: { Classic: 3 }, seasons: { Winter: 5 }, colors: { Blue: 2 } }}
+          facetCounts={{ styles: { Classic: 3 }, seasons: { Winter: 5 }, colors: { Blue: 2 }, tags: { winter: 4 } }}
           loading={false}
           error=""
           onFilterChange={onFilterChange}

@@ -65,7 +65,8 @@ describe('Coats', () => {
     await waitFor(() => expect(api.post).toHaveBeenCalledWith('/api/v1/closets/c1/coats', {
       name: 'Closet note',
       description: 'New note',
-      images: []
+      images: [],
+      tags: []
     }));
     await waitFor(() => expect(props.setCoats).toHaveBeenCalled());
 

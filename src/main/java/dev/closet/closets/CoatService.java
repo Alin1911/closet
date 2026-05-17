@@ -17,6 +17,9 @@ public class CoatService {
     @Autowired
     private ClosetRepository closetRepository;
 
+    @Autowired
+    private TagSuggestionService tagSuggestionService;
+
     public Optional<Coat> createCoat(ObjectId closetId, CoatCreateRequest payload) {
         Optional<Closet> optionalCloset = closetRepository.findById(closetId);
         if (optionalCloset.isEmpty()) {
@@ -24,8 +27,9 @@ public class CoatService {
         }
 
         List<String> images = payload.images() == null ? List.of() : payload.images();
+        List<String> tags = resolveTags(payload.tags(), payload.name(), payload.description(), images);
         Instant now = Instant.now();
-        Coat coat = new Coat(payload.name().trim(), payload.description().trim(), images);
+        Coat coat = new Coat(payload.name().trim(), payload.description().trim(), images, tags);
         coat.setCreatedAt(now);
         coat.setUpdatedAt(now);
         Coat saved = coatRepository.insert(coat);
@@ -67,6 +71,7 @@ public class CoatService {
         coat.setName(payload.name().trim());
         coat.setDescription(payload.description().trim());
         coat.setImages(payload.images() == null ? List.of() : payload.images());
+        coat.setTags(resolveTags(payload.tags(), payload.name(), payload.description(), coat.getImages()));
         coat.setUpdatedAt(Instant.now());
         Coat saved = coatRepository.save(coat);
 
@@ -98,5 +103,25 @@ public class CoatService {
         closet.setUpdatedAt(Instant.now());
         closetRepository.save(closet);
         return true;
+    }
+
+    private List<String> resolveTags(List<String> payloadTags, String name, String description, List<String> images) {
+        List<String> normalized = tagSuggestionService.normalizeTags(payloadTags);
+        if (normalized == null) {
+            normalized = List.of();
+        }
+        if (!normalized.isEmpty()) {
+            return normalized;
+        }
+        List<String> imageTokens = images == null ? List.of() : images.stream().map(this::extractFileName).toList();
+        return tagSuggestionService.suggest(List.of(name, description, String.join(" ", imageTokens)));
+    }
+
+    private String extractFileName(String value) {
+        if (value == null) {
+            return "";
+        }
+        int index = value.lastIndexOf('/');
+        return index >= 0 ? value.substring(index + 1) : value;
     }
 }

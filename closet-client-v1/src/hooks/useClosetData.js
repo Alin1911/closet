@@ -6,6 +6,7 @@ const DEFAULT_BROWSE_FILTERS = {
   style: '',
   season: '',
   color: '',
+  tag: '',
   sort: 'newest',
   q: '',
   page: 0,
@@ -22,6 +23,7 @@ const RECENT_VIEW_MULTIPLIER = 10;
 const STYLE_WEIGHT = 8;
 const SEASON_WEIGHT = 6;
 const COLOR_WEIGHT = 5;
+const TAG_WEIGHT = 4;
 const TRAILER_BONUS = 1;
 
 export default function useClosetData() {
@@ -46,12 +48,12 @@ export default function useClosetData() {
   const [browsePreferenceCounts, setBrowsePreferenceCounts] = useState(() => {
     const raw = localStorage.getItem('closetBrowsePreferences');
     if (!raw) {
-      return { style: {}, season: {}, color: {} };
+      return { style: {}, season: {}, color: {}, tag: {} };
     }
     try {
       return JSON.parse(raw);
     } catch (_) {
-      return { style: {}, season: {}, color: {} };
+      return { style: {}, season: {}, color: {}, tag: {} };
     }
   });
 
@@ -59,7 +61,7 @@ export default function useClosetData() {
   const [browseItems, setBrowseItems] = useState([]);
   const [browseTotalPages, setBrowseTotalPages] = useState(0);
   const [browseTotalCount, setBrowseTotalCount] = useState(0);
-  const [browseFacetCounts, setBrowseFacetCounts] = useState({ styles: {}, seasons: {}, colors: {} });
+  const [browseFacetCounts, setBrowseFacetCounts] = useState({ styles: {}, seasons: {}, colors: {}, tags: {} });
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseError, setBrowseError] = useState('');
   const [outfitPlans, setOutfitPlans] = useState([]);
@@ -162,7 +164,8 @@ export default function useClosetData() {
         facetCounts: {
           styles: parseHeaderObject(response.headers['x-facet-styles']),
           seasons: parseHeaderObject(response.headers['x-facet-seasons']),
-          colors: parseHeaderObject(response.headers['x-facet-colors'])
+          colors: parseHeaderObject(response.headers['x-facet-colors']),
+          tags: parseHeaderObject(response.headers['x-facet-tags'])
         },
         cachedAt: Date.now()
       };
@@ -198,7 +201,7 @@ export default function useClosetData() {
       }
     }
     setBrowseFilters((previous) => ({ ...previous, [name]: value, page: name === 'page' ? value : 0 }));
-    if ((name === 'style' || name === 'season' || name === 'color') && value) {
+    if ((name === 'style' || name === 'season' || name === 'color' || name === 'tag') && value) {
       setBrowsePreferenceCounts((previous) => {
         const next = {
           ...previous,
@@ -517,6 +520,7 @@ export default function useClosetData() {
       total += (browsePreferenceCounts.style?.[item.style] || 0) * STYLE_WEIGHT;
       total += (browsePreferenceCounts.season?.[item.season] || 0) * SEASON_WEIGHT;
       total += (browsePreferenceCounts.color?.[item.color] || 0) * COLOR_WEIGHT;
+      total += (item.tags || []).reduce((sum, tag) => sum + ((browsePreferenceCounts.tag?.[tag] || 0) * TAG_WEIGHT), 0);
       if (item.trailerLink) {
         total += TRAILER_BONUS;
       }
