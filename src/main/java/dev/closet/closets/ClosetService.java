@@ -2,6 +2,7 @@ package dev.closet.closets;
 
 
 import io.micrometer.core.instrument.Tags;
+import jakarta.annotation.PostConstruct;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +22,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ClosetService {
+    private static final long BROWSE_CACHE_TTL_SECONDS = 120;
+    private static final int BROWSE_CACHE_MAX_ENTRIES = 200;
+
     @Autowired
     private ClosetRepository closetRepository;
 
@@ -29,13 +34,51 @@ public class ClosetService {
     @Autowired(required = false)
     private io.micrometer.core.instrument.MeterRegistry meterRegistry;
 
+    private final Map<String, CacheEntry<List<Closet>>> closetListCache = Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, CacheEntry<List<Closet>>> eldest) {
+            return size() > BROWSE_CACHE_MAX_ENTRIES;
+        }
+    });
+    private final Map<String, CacheEntry<ClosetPageResponse>> closetPageCache = Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, CacheEntry<ClosetPageResponse>> eldest) {
+            return size() > BROWSE_CACHE_MAX_ENTRIES;
+        }
+    });
+
+    @PostConstruct
+    void registerCacheGauges() {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "list"), closetListCache, Map::size);
+        meterRegistry.gauge("closet.browse.cache.size", Tags.of("cache", "page"), closetPageCache, Map::size);
+    }
+
     public List<Closet> allClosets(String style, String season, String color, String sort){
+        String cacheKey = cacheKey(style, season, color, sort, null, null, null);
+        CacheEntry<List<Closet>> cached = closetListCache.get(cacheKey);
+        if (cached != null && !cached.expired()) {
+            recordCacheMetrics("list", "hit");
+            recordBrowseMetrics("list", false, cached.value().size());
+            return cached.value();
+        }
         List<Closet> closets = filterAndSort(style, season, color, sort, null);
+        closetListCache.put(cacheKey, new CacheEntry<>(closets, Instant.now().plusSeconds(BROWSE_CACHE_TTL_SECONDS)));
+        recordCacheMetrics("list", "miss");
         recordBrowseMetrics("list", false, closets.size());
         return closets;
     }
 
     public ClosetPageResponse allClosetsPage(String style, String season, String color, String sort, String query, int page, int size) {
+        String cacheKey = cacheKey(style, season, color, sort, query, page, size);
+        CacheEntry<ClosetPageResponse> cached = closetPageCache.get(cacheKey);
+        if (cached != null && !cached.expired()) {
+            recordCacheMetrics("page", "hit");
+            recordBrowseMetrics("page", query != null && !query.isBlank(), (int) Math.min(Integer.MAX_VALUE, cached.value().totalCount()));
+            return cached.value();
+        }
         boolean hasQuery = query != null && !query.isBlank();
         List<Closet> filtered = filterAndSort(style, season, color, sort, query);
         Map<String, Long> styleCounts = buildFacetCounts(filtered, Closet::getStyle);
@@ -50,8 +93,11 @@ public class ClosetService {
         int start = Math.min(page * size, filtered.size());
         int end = Math.min(start + size, filtered.size());
         int totalPages = filtered.isEmpty() ? 0 : (int) Math.ceil((double) filtered.size() / size);
+        ClosetPageResponse response = new ClosetPageResponse(filtered.subList(start, end), filtered.size(), page, size, totalPages, styleCounts, seasonCounts, colorCounts);
+        closetPageCache.put(cacheKey, new CacheEntry<>(response, Instant.now().plusSeconds(BROWSE_CACHE_TTL_SECONDS)));
+        recordCacheMetrics("page", "miss");
         recordBrowseMetrics("page", hasQuery, filtered.size());
-        return new ClosetPageResponse(filtered.subList(start, end), filtered.size(), page, size, totalPages, styleCounts, seasonCounts, colorCounts);
+        return response;
     }
 
     private List<Closet> filterAndSort(String style, String season, String color, String sort, String query) {
@@ -113,7 +159,9 @@ public class ClosetService {
         closet.setCreatedAt(now);
         closet.setUpdatedAt(now);
         closet.setCoatsIds(new ArrayList<>());
-        return closetRepository.insert(closet);
+        Closet created = closetRepository.insert(closet);
+        clearBrowseCaches();
+        return created;
     }
 
     public Optional<Closet> updateCloset(ObjectId id, ClosetUpsertRequest payload) {
@@ -132,7 +180,9 @@ public class ClosetService {
         closet.setSeason(payload.season());
         closet.setColor(payload.color());
         closet.setUpdatedAt(Instant.now());
-        return Optional.of(closetRepository.save(closet));
+        Optional<Closet> updated = Optional.of(closetRepository.save(closet));
+        clearBrowseCaches();
+        return updated;
     }
 
     public boolean deleteCloset(ObjectId id) {
@@ -146,7 +196,26 @@ public class ClosetService {
             coatRepository.deleteAll(closet.getCoatsIds());
         }
         closetRepository.deleteById(id);
+        clearBrowseCaches();
         return true;
+    }
+
+    private String cacheKey(String style, String season, String color, String sort, String query, Integer page, Integer size) {
+        return String.join("|",
+                normalize(style) == null ? "-" : normalize(style),
+                normalize(season) == null ? "-" : normalize(season),
+                normalize(color) == null ? "-" : normalize(color),
+                normalize(sort) == null ? "-" : normalize(sort),
+                normalize(query) == null ? "-" : normalize(query),
+                page == null ? "-" : String.valueOf(page),
+                size == null ? "-" : String.valueOf(size)
+        );
+    }
+
+    private void clearBrowseCaches() {
+        closetListCache.clear();
+        closetPageCache.clear();
+        recordCacheMetrics("all", "evict");
     }
 
     private String normalize(String value) {
@@ -231,5 +300,19 @@ public class ClosetService {
                 .increment();
         meterRegistry.summary("closet.browse.result.count", tags)
                 .record(resultCount);
+    }
+
+    private void recordCacheMetrics(String mode, String result) {
+        if (meterRegistry == null) {
+            return;
+        }
+        Tags tags = Tags.of("mode", mode, "result", result);
+        meterRegistry.counter("closet.browse.cache.requests", tags).increment();
+    }
+
+    private record CacheEntry<T>(T value, Instant expiresAt) {
+        private boolean expired() {
+            return Instant.now().isAfter(expiresAt);
+        }
     }
 }

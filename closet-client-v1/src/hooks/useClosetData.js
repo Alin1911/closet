@@ -13,6 +13,8 @@ const DEFAULT_BROWSE_FILTERS = {
 };
 
 const RECOMMENDATION_LIMIT = 6;
+const BROWSE_CACHE_LIMIT = 30;
+const BROWSE_CACHE_TTL_MS = 2 * 60 * 1000;
 const MIN_RECENT_WEIGHT = 0;
 const MAX_RECENT_WEIGHT = 8;
 const FAVORITE_WEIGHT = 80;
@@ -130,12 +132,17 @@ export default function useClosetData() {
     const key = JSON.stringify(filters);
     if (!force && browseCacheRef.current.has(key)) {
       const cached = browseCacheRef.current.get(key);
-      setBrowseItems(cached.items);
-      setBrowseTotalPages(cached.totalPages);
-      setBrowseTotalCount(cached.totalCount);
-      setBrowseFacetCounts(cached.facetCounts);
-      setBrowseError('');
-      return;
+      if (Date.now() - (cached.cachedAt || 0) < BROWSE_CACHE_TTL_MS) {
+        browseCacheRef.current.delete(key);
+        browseCacheRef.current.set(key, { ...cached, cachedAt: Date.now() });
+        setBrowseItems(cached.items);
+        setBrowseTotalPages(cached.totalPages);
+        setBrowseTotalCount(cached.totalCount);
+        setBrowseFacetCounts(cached.facetCounts);
+        setBrowseError('');
+        return;
+      }
+      browseCacheRef.current.delete(key);
     }
 
     setBrowseLoading(true);
@@ -156,9 +163,17 @@ export default function useClosetData() {
           styles: parseHeaderObject(response.headers['x-facet-styles']),
           seasons: parseHeaderObject(response.headers['x-facet-seasons']),
           colors: parseHeaderObject(response.headers['x-facet-colors'])
-        }
+        },
+        cachedAt: Date.now()
       };
       browseCacheRef.current.set(key, next);
+      while (browseCacheRef.current.size > BROWSE_CACHE_LIMIT) {
+        const firstKey = browseCacheRef.current.keys().next().value;
+        if (!firstKey) {
+          break;
+        }
+        browseCacheRef.current.delete(firstKey);
+      }
       setBrowseItems(next.items);
       setBrowseTotalPages(next.totalPages);
       setBrowseTotalCount(next.totalCount);

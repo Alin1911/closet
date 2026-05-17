@@ -164,7 +164,8 @@ Next UX opportunities:
 - ✅ Personalized home recommendations with graceful fallback to popular closets for low-activity users
 - ✅ Mobile browse metadata parity (facet counts + pagination metadata surfaced in UX)
 - ✅ Mobile retry/recovery UX expansion across key error states (home/browse/saved/coats)
-- ⏳ Scaling patterns: search relevance, indexing, caching, advanced observability
+- ✅ Scaling patterns: search relevance, indexing, caching, advanced observability
+- ✅ Added search/browse scaling baseline with Mongo indexes, bounded/TTL caching on backend + frontend, and cache observability metrics
 
 ---
 
@@ -389,7 +390,7 @@ closet/
 > **1) Outfit Planner Calendar — ✅ Implemented**
 > As a logged-in user, I can now plan outfits on a calendar and manage upcoming looks.
 
-> **2) Personalized Closet Recommendations**
+> **2) Personalized Closet Recommendations — ✅ Implemented**
 > As a user, I want personalized closet recommendations so that I can discover styles that better match my preferences.
 >
 > **Acceptance Criteria**

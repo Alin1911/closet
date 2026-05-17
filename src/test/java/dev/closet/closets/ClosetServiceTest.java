@@ -12,6 +12,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,6 +59,18 @@ class ClosetServiceTest {
         assertEquals(2, response.items().size());
         assertEquals("Alpha Closet", response.items().get(0).getName());
         assertEquals("Bravo Closet", response.items().get(1).getName());
+    }
+
+    @Test
+    void allClosetsPage_shouldUseCacheForIdenticalQueries() {
+        Closet closet = closet(new ObjectId(), "Alpha Closet", "a", "Modern", "Summer", "White", Instant.parse("2026-02-01T00:00:00Z"));
+        when(closetRepository.findAll()).thenReturn(List.of(closet));
+
+        ClosetPageResponse first = closetService.allClosetsPage("Modern", "Summer", "White", "newest", "alpha", 0, 12);
+        ClosetPageResponse second = closetService.allClosetsPage("Modern", "Summer", "White", "newest", "alpha", 0, 12);
+
+        assertEquals(first.items().size(), second.items().size());
+        verify(closetRepository, times(1)).findAll();
     }
 
     private Closet closet(ObjectId id, String name, String description, String style, String season, String color, Instant createdAt) {
