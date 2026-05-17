@@ -66,7 +66,15 @@ function App() {
     refreshOutfitPlans,
     createOutfitPlan,
     updateOutfitPlan,
-    deleteOutfitPlan
+    deleteOutfitPlan,
+    searchAlerts,
+    searchAlertsLoading,
+    searchAlertsError,
+    refreshSearchAlerts,
+    createSearchAlert,
+    updateSearchAlert,
+    deleteSearchAlert,
+    acknowledgeSearchAlert
   } = useClosetData();
   const [toast, setToast] = useState({ show: false, message: '' });
 
@@ -87,7 +95,26 @@ function App() {
           <Route path="/browse" element={<Browse filters={browseFilters} items={browseItems} totalPages={browseTotalPages} totalCount={browseTotalCount} facetCounts={browseFacetCounts} loading={browseLoading} error={browseError} onFilterChange={onBrowseFilterChange} onResetFilters={resetBrowseFilters} onRetry={retryBrowseFetch} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path="/saved" element={<ProtectedRoute authUser={authUser}><Saved closets={savedClosets} loading={savedLoading} error={savedError} onRetry={retrySavedFetch} authUser={authUser} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} onNotify={showToast} /></ProtectedRoute>} />
           <Route path="/planner" element={<ProtectedRoute authUser={authUser}><Planner closets={closets} plans={outfitPlans} loading={outfitPlansLoading} error={outfitPlansError} onRetry={refreshOutfitPlans} onCreate={createOutfitPlan} onUpdate={updateOutfitPlan} onDelete={deleteOutfitPlan} onNotify={showToast} /></ProtectedRoute>} />
-          <Route path="/profile" element={<Profile authUser={authUser} onLogin={handleLogin} onRegister={handleRegister} onUpdateProfile={handleProfileUpdate} onNotify={showToast} />} />
+          <Route
+            path="/profile"
+            element={(
+              <Profile
+                authUser={authUser}
+                onLogin={handleLogin}
+                onRegister={handleRegister}
+                onUpdateProfile={handleProfileUpdate}
+                onNotify={showToast}
+                searchAlerts={searchAlerts}
+                searchAlertsLoading={searchAlertsLoading}
+                searchAlertsError={searchAlertsError}
+                onRefreshSearchAlerts={refreshSearchAlerts}
+                onCreateSearchAlert={createSearchAlert}
+                onUpdateSearchAlert={updateSearchAlert}
+                onDeleteSearchAlert={deleteSearchAlert}
+                onAcknowledgeSearchAlert={acknowledgeSearchAlert}
+              />
+            )}
+          />
           <Route path="/closets/:closetId" element={<ClosetDetail closets={closets} loading={closetsLoading} error={closetsError} onTrackViewed={trackRecentlyViewed} onToggleFavorite={handleToggleFavorite} authUser={authUser} onNotify={showToast} />} />
           <Route path='/trailer/:ytTrailerId' element={<Trailer/>} />
           <Route path='/Trailer/:ytTrailerId' element={<LegacyTrailerRedirect/>} />

@@ -60,4 +60,35 @@ describe('Profile', () => {
       });
     });
   });
+
+  it('submits search alert payload for authenticated user', async () => {
+    const onCreateSearchAlert = jest.fn().mockResolvedValue('Search alert created.');
+    render(
+      <MemoryRouter>
+        <Profile
+          authUser={{ userId: 'u1', displayName: 'Current User', email: 'user@closet.dev', favoriteClosetIds: [] }}
+          onLogin={jest.fn()}
+          onRegister={jest.fn()}
+          onUpdateProfile={jest.fn()}
+          onNotify={jest.fn()}
+          onCreateSearchAlert={onCreateSearchAlert}
+        />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/search query/i), { target: { value: 'winter' } });
+    fireEvent.change(screen.getByLabelText(/^style$/i), { target: { value: 'Classic' } });
+    fireEvent.click(screen.getByRole('button', { name: /save search alert/i }));
+
+    await waitFor(() => {
+      expect(onCreateSearchAlert).toHaveBeenCalledWith({
+        query: 'winter',
+        style: 'Classic',
+        season: undefined,
+        color: undefined,
+        inAppEnabled: true,
+        emailEnabled: false
+      });
+    });
+  });
 });

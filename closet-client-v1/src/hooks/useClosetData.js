@@ -63,6 +63,9 @@ export default function useClosetData() {
   const [outfitPlans, setOutfitPlans] = useState([]);
   const [outfitPlansLoading, setOutfitPlansLoading] = useState(false);
   const [outfitPlansError, setOutfitPlansError] = useState('');
+  const [searchAlerts, setSearchAlerts] = useState([]);
+  const [searchAlertsLoading, setSearchAlertsLoading] = useState(false);
+  const [searchAlertsError, setSearchAlertsError] = useState('');
 
   const refreshInFlightRef = useRef(null);
   const browseCacheRef = useRef(new Map());
@@ -308,6 +311,8 @@ export default function useClosetData() {
     setSavedError('');
     setOutfitPlans([]);
     setOutfitPlansError('');
+    setSearchAlerts([]);
+    setSearchAlertsError('');
     trackEvent('logout');
   }, [authUser?.token, updateAuthUser]);
 
@@ -384,6 +389,69 @@ export default function useClosetData() {
   useEffect(() => {
     refreshOutfitPlans();
   }, [refreshOutfitPlans]);
+
+  const refreshSearchAlerts = useCallback(async () => {
+    if (!authUser?.userId) {
+      setSearchAlerts([]);
+      setSearchAlertsError('');
+      return;
+    }
+    setSearchAlertsLoading(true);
+    setSearchAlertsError('');
+    try {
+      const response = await api.get(`/api/v1/users/${authUser.userId}/search-alerts`);
+      setSearchAlerts(response.data || []);
+    } catch (error) {
+      console.error(error);
+      setSearchAlertsError('Could not load search alerts.');
+    } finally {
+      setSearchAlertsLoading(false);
+    }
+  }, [authUser?.userId]);
+
+  useEffect(() => {
+    refreshSearchAlerts();
+  }, [refreshSearchAlerts]);
+
+  const createSearchAlert = useCallback(async (payload) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to save search alerts.');
+    }
+    const response = await api.post(`/api/v1/users/${authUser.userId}/search-alerts`, payload);
+    await refreshSearchAlerts();
+    trackEvent('search_alert_created');
+    return response?.data?.message || 'Search alert created.';
+  }, [authUser?.userId, refreshSearchAlerts]);
+
+  const updateSearchAlert = useCallback(async (alertId, payload) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to update search alerts.');
+    }
+    const response = await api.put(`/api/v1/users/${authUser.userId}/search-alerts/${alertId}`, payload);
+    await refreshSearchAlerts();
+    trackEvent('search_alert_updated');
+    return response?.data?.message || 'Search alert updated.';
+  }, [authUser?.userId, refreshSearchAlerts]);
+
+  const deleteSearchAlert = useCallback(async (alertId) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to delete search alerts.');
+    }
+    const response = await api.delete(`/api/v1/users/${authUser.userId}/search-alerts/${alertId}`);
+    await refreshSearchAlerts();
+    trackEvent('search_alert_deleted');
+    return response?.data?.message || 'Search alert deleted.';
+  }, [authUser?.userId, refreshSearchAlerts]);
+
+  const acknowledgeSearchAlert = useCallback(async (alertId) => {
+    if (!authUser?.userId) {
+      throw new Error('Please sign in to manage search alerts.');
+    }
+    const response = await api.post(`/api/v1/users/${authUser.userId}/search-alerts/${alertId}/acknowledge`);
+    await refreshSearchAlerts();
+    trackEvent('search_alert_acknowledged');
+    return response?.data?.message || 'Search alert acknowledged.';
+  }, [authUser?.userId, refreshSearchAlerts]);
 
   const createOutfitPlan = useCallback(async (payload) => {
     if (!authUser?.userId) {
@@ -499,6 +567,14 @@ export default function useClosetData() {
     refreshOutfitPlans,
     createOutfitPlan,
     updateOutfitPlan,
-    deleteOutfitPlan
+    deleteOutfitPlan,
+    searchAlerts,
+    searchAlertsLoading,
+    searchAlertsError,
+    refreshSearchAlerts,
+    createSearchAlert,
+    updateSearchAlert,
+    deleteSearchAlert,
+    acknowledgeSearchAlert
   };
 }

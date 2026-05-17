@@ -35,6 +35,7 @@ Closet combines a Spring Boot API and a React client to present closet items in 
 - Outfit planner calendar for authenticated users (create/update/delete plans, calendar visibility, upcoming list)
 - Search + pagination support with relevance ranking, typo tolerance, and faceted counts
 - Personalized recommendations on Home using user activity signals (recently viewed, saved, filter preferences) with graceful fallback
+- Advanced search alerts with saved filters, user-managed in-app/email preferences, and match acknowledgment
 - Toast feedback + skeleton loading states across core screens
 - DTO validation + consistent API response envelope for write/auth flows
 - REST API with Spring Web + Spring Data MongoDB, CORS enabled for `http://localhost:3000`
@@ -353,6 +354,11 @@ Auth/profile + favorites:
 - `GET /api/v1/users/{userId}/favorites` → list saved closets
 - `PUT /api/v1/users/{userId}/favorites/{closetId}` → save closet
 - `DELETE /api/v1/users/{userId}/favorites/{closetId}` → remove saved closet
+- `GET /api/v1/users/{userId}/search-alerts` → list saved search alerts with new-match counts
+- `POST /api/v1/users/{userId}/search-alerts` → create a search alert with filters and preferences
+- `PUT /api/v1/users/{userId}/search-alerts/{alertId}` → update search alert filters/preferences
+- `POST /api/v1/users/{userId}/search-alerts/{alertId}/acknowledge` → mark alert matches as seen
+- `DELETE /api/v1/users/{userId}/search-alerts/{alertId}` → delete a saved search alert
 
 Outfit planner:
 - `GET /api/v1/users/{userId}/outfit-plans` → list outfit plans for user
@@ -403,9 +409,9 @@ closet/
 > As a user, I want to save searches and receive alerts for new matching closets so that I do not miss relevant additions.
 >
 > **Acceptance Criteria**
-> - Users can save a search query with active filters (style, season, color, text query).
-> - The system checks new/updated closets against saved searches.
-> - Users can manage alert preferences (in-app and/or email) from profile settings.
+> - ✅ Users can save a search query with active filters (style, season, color, text query).
+> - ✅ The system checks new/updated closets against saved searches.
+> - ✅ Users can manage alert preferences (in-app and/or email) from profile settings.
 
 > **5) Closet Sharing & Collaboration**
 > As a user, I want to share selected closets with friends or collaborators so that we can plan looks together.
