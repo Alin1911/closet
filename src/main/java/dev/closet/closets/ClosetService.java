@@ -55,7 +55,7 @@ public class ClosetService {
         CacheEntry<ClosetPageResponse> cached = closetPageCache.get(cacheKey);
         if (cached != null && !cached.expired()) {
             recordCacheMetrics("page", "hit");
-            recordBrowseMetrics("page", query != null && !query.isBlank(), cached.value().totalCount());
+            recordBrowseMetrics("page", query != null && !query.isBlank(), (int) Math.min(Integer.MAX_VALUE, cached.value().totalCount()));
             return cached.value();
         }
         boolean hasQuery = query != null && !query.isBlank();
